@@ -3,6 +3,8 @@
 🤖 基于 Telegram 的 EVM 链代币网格交易机器人
 
 <img width="538" height="676" alt="image" src="https://github.com/user-attachments/assets/ede5635a-16f5-4a78-940e-5ff01bbbc00c" />
+<img width="553" height="892" alt="image" src="https://github.com/user-attachments/assets/a95b5bde-3cd4-4921-80b5-55fc937207f3" />
+<img width="546" height="724" alt="image" src="https://github.com/user-attachments/assets/6ebd35bd-8fc4-4502-a683-d49a2ceb69ed" />
 
 
 ## 📋 项目简介
