@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.24.1"
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Build for Windows and Linux
+        run: |
+          APP_NAME="evm-grid-bot"
+          VERSION=${{ github.ref_name }}
+
+          # Linux AMD64
+          GOOS=linux GOARCH=amd64 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-linux .
+
+          # Windows AMD64
+          GOOS=windows GOARCH=amd64 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-windows.exe .
+
+      - name: Create release packages
+        run: |
+          APP_NAME="evm-grid-bot"
+          VERSION=${{ github.ref_name }}
+
+          # Linux 包
+          mkdir -p linux-package/etc
+          cp ${APP_NAME}-linux linux-package/${APP_NAME}
+          cp etc/config.yaml.sample linux-package/etc/config.yaml
+          cp README.md linux-package/ 2>/dev/null || true
+          tar -czf ${APP_NAME}-${VERSION}-linux-amd64.tar.gz -C linux-package .
+
+          # Windows 包
+          mkdir -p windows-package/etc
+          cp ${APP_NAME}-windows.exe windows-package/${APP_NAME}.exe
+          cp etc/config.yaml.sample windows-package/etc/config.yaml
+          cp README.md windows-package/ 2>/dev/null || true
+          cd windows-package && zip -r ../${APP_NAME}-${VERSION}-windows-amd64.zip . && cd ..
+
+          # 生成校验和
+          sha256sum *.tar.gz *.zip > checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            *.tar.gz
+            *.zip
+            checksums.txt
+          generate_release_notes: true
+          body: |
+            ## 🚀 版本 ${{ github.ref_name }}
+
+            ### 📦 下载
+
+            - **Linux AMD64**: `evm-grid-bot-${{ github.ref_name }}-linux-amd64.tar.gz`
+            - **Windows AMD64**: `evm-grid-bot-${{ github.ref_name }}-windows-amd64.zip`
+
+            ### 🔧 使用方法
+
+            1. 下载对应平台的压缩包
+            2. 解压到目标目录
+            3. 修改 `etc/config.yaml` 配置文件
+            4. 运行可执行文件：
+               - Linux: `./evm-grid-bot -f etc/config.yaml`
+               - Windows: `./evm-grid-bot.exe -f etc/config.yaml`
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

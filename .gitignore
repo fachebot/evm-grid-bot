@@ -26,7 +26,7 @@ go.work.sum
 
 logs
 data
-*.yml
-*.yaml
+etc/*.yml
+etc/*.yaml
 
 evm-grid-bot

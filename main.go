@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,7 +23,11 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
-var configFile = flag.String("f", "etc/config.yaml", "the config file")
+var (
+	version     = "dev"
+	showVersion = flag.Bool("version", false, "显示版本信息")
+	configFile  = flag.String("f", "etc/config.yaml", "the config file")
+)
 
 func startAllStrategy(svcCtx *svc.ServiceContext, strategyEngine *engine.StrategyEngine) {
 	offset := 0
@@ -55,6 +60,11 @@ func startAllStrategy(svcCtx *svc.ServiceContext, strategyEngine *engine.Strateg
 
 func main() {
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("version: %s\n", version)
+		return
+	}
 
 	// 读取配置文件
 	c, err := config.LoadFromFile(*configFile)
