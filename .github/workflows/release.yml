@@ -64,37 +64,45 @@ jobs:
 
           echo "创建发布包..."
 
-          # Linux AMD64 包
+          # Linux AMD64 包 - 创建顶级目录结构
           echo "打包 Linux AMD64..."
-          mkdir -p linux-amd64-package/etc
-          cp ${APP_NAME}-linux-amd64 linux-amd64-package/${APP_NAME}
-          cp etc/config.yaml.sample linux-amd64-package/etc/config.yaml
-          cp README.md linux-amd64-package/ 2>/dev/null || true
-          tar -czf ${APP_NAME}-${VERSION}-linux-amd64.tar.gz -C linux-amd64-package .
+          LINUX_AMD64_DIR="${APP_NAME}-${VERSION}-linux-amd64"
+          mkdir -p ${LINUX_AMD64_DIR}/etc
+          cp ${APP_NAME}-linux-amd64 ${LINUX_AMD64_DIR}/${APP_NAME}
+          cp etc/config.yaml.sample ${LINUX_AMD64_DIR}/etc/config.yaml
+          cp README.md ${LINUX_AMD64_DIR}/ 2>/dev/null || true
+          tar -czf ${LINUX_AMD64_DIR}.tar.gz ${LINUX_AMD64_DIR}
 
-          # Linux 386 包
+          # Linux 386 包 - 创建顶级目录结构
           echo "打包 Linux 386..."
-          mkdir -p linux-386-package/etc
-          cp ${APP_NAME}-linux-386 linux-386-package/${APP_NAME}
-          cp etc/config.yaml.sample linux-386-package/etc/config.yaml
-          cp README.md linux-386-package/ 2>/dev/null || true
-          tar -czf ${APP_NAME}-${VERSION}-linux-386.tar.gz -C linux-386-package .
+          LINUX_386_DIR="${APP_NAME}-${VERSION}-linux-386"
+          mkdir -p ${LINUX_386_DIR}/etc
+          cp ${APP_NAME}-linux-386 ${LINUX_386_DIR}/${APP_NAME}
+          cp etc/config.yaml.sample ${LINUX_386_DIR}/etc/config.yaml
+          cp README.md ${LINUX_386_DIR}/ 2>/dev/null || true
+          tar -czf ${LINUX_386_DIR}.tar.gz ${LINUX_386_DIR}
 
-          # Windows AMD64 包
+          # Windows AMD64 包 - 创建顶级目录结构
           echo "打包 Windows AMD64..."
-          mkdir -p windows-amd64-package/etc
-          cp ${APP_NAME}-windows-amd64.exe windows-amd64-package/${APP_NAME}.exe
-          cp etc/config.yaml.sample windows-amd64-package/etc/config.yaml
-          cp README.md windows-amd64-package/ 2>/dev/null || true
-          cd windows-amd64-package && zip -r ../${APP_NAME}-${VERSION}-windows-amd64.zip . && cd ..
+          WINDOWS_AMD64_DIR="${APP_NAME}-${VERSION}-windows-amd64"
+          mkdir -p ${WINDOWS_AMD64_DIR}/etc
+          cp ${APP_NAME}-windows-amd64.exe ${WINDOWS_AMD64_DIR}/${APP_NAME}.exe
+          cp etc/config.yaml.sample ${WINDOWS_AMD64_DIR}/etc/config.yaml
+          cp README.md ${WINDOWS_AMD64_DIR}/ 2>/dev/null || true
+          zip -r ${WINDOWS_AMD64_DIR}.zip ${WINDOWS_AMD64_DIR}
 
-          # Windows 386 包
+          # Windows 386 包 - 创建顶级目录结构
           echo "打包 Windows 386..."
-          mkdir -p windows-386-package/etc
-          cp ${APP_NAME}-windows-386.exe windows-386-package/${APP_NAME}.exe
-          cp etc/config.yaml.sample windows-386-package/etc/config.yaml
-          cp README.md windows-386-package/ 2>/dev/null || true
-          cd windows-386-package && zip -r ../${APP_NAME}-${VERSION}-windows-386.zip . && cd ..
+          WINDOWS_386_DIR="${APP_NAME}-${VERSION}-windows-386"
+          mkdir -p ${WINDOWS_386_DIR}/etc
+          cp ${APP_NAME}-windows-386.exe ${WINDOWS_386_DIR}/${APP_NAME}.exe
+          cp etc/config.yaml.sample ${WINDOWS_386_DIR}/etc/config.yaml
+          cp README.md ${WINDOWS_386_DIR}/ 2>/dev/null || true
+          zip -r ${WINDOWS_386_DIR}.zip ${WINDOWS_386_DIR}
+
+          # 清理临时目录
+          echo "清理临时目录..."
+          rm -rf ${LINUX_AMD64_DIR} ${LINUX_386_DIR} ${WINDOWS_AMD64_DIR} ${WINDOWS_386_DIR}
 
           # 生成校验和
           echo "生成校验和..."
