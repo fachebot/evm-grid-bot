@@ -2,6 +2,9 @@
 
 🤖 基于 Telegram 的 EVM 链代币网格交易机器人
 
+<img width="538" height="676" alt="image" src="https://github.com/user-attachments/assets/ede5635a-16f5-4a78-940e-5ff01bbbc00c" />
+
+
 ## 📋 项目简介
 
 EVMGridBot 是一个智能的网格交易机器人，通过 Telegram 接口为用户提供 EVM 链（目前支持 BSC 链，扩展到其他 EVM 会非常容易）上代币的自动化网格交易服务。用户只需设置价格区间，机器人将在该区间内自动执行低买高卖的网格交易策略，帮助用户在震荡行情中获利。
