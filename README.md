@@ -175,7 +175,7 @@ TokenRequirements:
 
 **3. Telegram Bot Token**
 
-- 在 Telegram 中找到 @BotFather
+- 在 Telegram 中找到 [@BotFather](https://t.me/botfather)
 - 发送 /newbot 创建新机器人
 - 按提示设置机器人名称和用户名
 - 获取 Bot Token
