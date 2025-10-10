@@ -31,6 +31,8 @@ EVMGridBot 是一个智能的网格交易机器人，通过 Telegram 接口为�
 
 ## 🚀 快速开始
 
+> 📌 **普通用户提示**：如果您不是开发者，可以直接跳过下面的编译步骤，前往 [Release 页面](https://github.com/fachebot/evm-grid-bot/releases) 下载最新版本的可执行文件，然后直接查看 [配置说明](#⚙️-配置说明) 部分，修改配置文件后即可运行。
+
 ### 环境要求
 
 - Git
