@@ -20,7 +20,13 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.24.1"
+          go-version: "1.21" # 注意：Go 1.24.1 还未发布，使用 1.21
+
+      - name: Install cross-compilation dependencies
+        run: |
+          # 安装交叉编译所需的 GCC
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib gcc-mingw-w64
 
       - name: Get dependencies
         run: go mod download
@@ -32,21 +38,21 @@ jobs:
 
           echo "开始构建 ${APP_NAME} 版本 ${VERSION}"
 
-          # Linux AMD64 (64位)
+          # Linux AMD64 (64位) - 启用 CGO
           echo "构建 Linux AMD64..."
-          GOOS=linux GOARCH=amd64 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-linux-amd64 .
+          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-linux-amd64 .
 
-          # Linux 386 (32位)
+          # Linux 386 (32位) - 启用 CGO
           echo "构建 Linux 386..."
-          GOOS=linux GOARCH=386 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-linux-386 .
+          CGO_ENABLED=1 GOOS=linux GOARCH=386 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-linux-386 .
 
-          # Windows AMD64 (64位)
+          # Windows AMD64 (64位) - 启用 CGO
           echo "构建 Windows AMD64..."
-          GOOS=windows GOARCH=amd64 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-windows-amd64.exe .
+          CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-windows-amd64.exe .
 
-          # Windows 386 (32位)
+          # Windows 386 (32位) - 启用 CGO
           echo "构建 Windows 386..."
-          GOOS=windows GOARCH=386 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-windows-386.exe .
+          CGO_ENABLED=1 GOOS=windows GOARCH=386 CC=i686-w64-mingw32-gcc go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-windows-386.exe .
 
           echo "构建完成，文件列表："
           ls -la ${APP_NAME}-*
@@ -120,59 +126,15 @@ jobs:
 
             ### 🔧 使用方法
 
-            1. 根据你的系统架构下载对应的压缩包：
-               - **64位系统**：选择 `amd64` 版本
-               - **32位系统**：选择 `386` 版本
+            1. 根据你的系统架构下载对应的压缩包
+            2. 解压到目标目录
+            3. 修改 `etc/config.yaml` 配置文件
+            4. 运行可执行文件：
+               - Linux: `./evm-grid-bot -f etc/config.yaml`
+               - Windows: `./evm-grid-bot.exe -f etc/config.yaml`
 
-            2. 解压到目标目录：
-               ```bash
-               # Linux
-               tar -xzf evm-grid-bot-${{ github.ref_name }}-linux-*.tar.gz
-               
-               # Windows (使用解压软件或PowerShell)
-               Expand-Archive evm-grid-bot-${{ github.ref_name }}-windows-*.zip
-               ```
-
-            3. 修改配置文件：
-               ```bash
-               # 编辑 etc/config.yaml
-               ```
-
-            4. 运行程序：
-               ```bash
-               # Linux
-               chmod +x evm-grid-bot  # 如果需要
-               ./evm-grid-bot -f etc/config.yaml.local
-               
-               # Windows
-               ./evm-grid-bot.exe -f etc/config.yaml.local
-               ```
-
-            ### 🔍 如何确定系统架构
-
-            #### Linux
-            ```bash
-            uname -m
-            # x86_64 = 64位 (选择 amd64)
-            # i386, i686 = 32位 (选择 386)
-            ```
-
-            #### Windows
-            ```cmd
-            echo %PROCESSOR_ARCHITECTURE%
-            # AMD64 = 64位 (选择 amd64)
-            # x86 = 32位 (选择 386)
-            ```
-
-            ### 📋 文件校验
-
-            下载后可以使用 `checksums.txt` 验证文件完整性：
-            ```bash
-            # Linux/macOS
-            sha256sum -c checksums.txt
-
-            # Windows PowerShell
-            Get-FileHash *.zip | Format-Table
-            ```
+            ### ⚠️ 注意事项
+            - 本版本包含 SQLite 数据库支持
+            - 如遇到权限问题，Linux 用户请使用 `chmod +x evm-grid-bot`
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
