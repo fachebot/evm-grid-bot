@@ -25,38 +25,77 @@ jobs:
       - name: Get dependencies
         run: go mod download
 
-      - name: Build for Windows and Linux
+      - name: Build for Windows and Linux (64-bit and 32-bit)
         run: |
           APP_NAME="evm-grid-bot"
           VERSION=${{ github.ref_name }}
 
-          # Linux AMD64
-          GOOS=linux GOARCH=amd64 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-linux .
+          echo "开始构建 ${APP_NAME} 版本 ${VERSION}"
 
-          # Windows AMD64
-          GOOS=windows GOARCH=amd64 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-windows.exe .
+          # Linux AMD64 (64位)
+          echo "构建 Linux AMD64..."
+          GOOS=linux GOARCH=amd64 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-linux-amd64 .
+
+          # Linux 386 (32位)
+          echo "构建 Linux 386..."
+          GOOS=linux GOARCH=386 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-linux-386 .
+
+          # Windows AMD64 (64位)
+          echo "构建 Windows AMD64..."
+          GOOS=windows GOARCH=amd64 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-windows-amd64.exe .
+
+          # Windows 386 (32位)
+          echo "构建 Windows 386..."
+          GOOS=windows GOARCH=386 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-windows-386.exe .
+
+          echo "构建完成，文件列表："
+          ls -la ${APP_NAME}-*
 
       - name: Create release packages
         run: |
           APP_NAME="evm-grid-bot"
           VERSION=${{ github.ref_name }}
 
-          # Linux 包
-          mkdir -p linux-package/etc
-          cp ${APP_NAME}-linux linux-package/${APP_NAME}
-          cp etc/config.yaml.sample linux-package/etc/config.yaml
-          cp README.md linux-package/ 2>/dev/null || true
-          tar -czf ${APP_NAME}-${VERSION}-linux-amd64.tar.gz -C linux-package .
+          echo "创建发布包..."
 
-          # Windows 包
-          mkdir -p windows-package/etc
-          cp ${APP_NAME}-windows.exe windows-package/${APP_NAME}.exe
-          cp etc/config.yaml.sample windows-package/etc/config.yaml
-          cp README.md windows-package/ 2>/dev/null || true
-          cd windows-package && zip -r ../${APP_NAME}-${VERSION}-windows-amd64.zip . && cd ..
+          # Linux AMD64 包
+          echo "打包 Linux AMD64..."
+          mkdir -p linux-amd64-package/etc
+          cp ${APP_NAME}-linux-amd64 linux-amd64-package/${APP_NAME}
+          cp etc/config.yaml.sample linux-amd64-package/etc/config.yaml
+          cp README.md linux-amd64-package/ 2>/dev/null || true
+          tar -czf ${APP_NAME}-${VERSION}-linux-amd64.tar.gz -C linux-amd64-package .
+
+          # Linux 386 包
+          echo "打包 Linux 386..."
+          mkdir -p linux-386-package/etc
+          cp ${APP_NAME}-linux-386 linux-386-package/${APP_NAME}
+          cp etc/config.yaml.sample linux-386-package/etc/config.yaml
+          cp README.md linux-386-package/ 2>/dev/null || true
+          tar -czf ${APP_NAME}-${VERSION}-linux-386.tar.gz -C linux-386-package .
+
+          # Windows AMD64 包
+          echo "打包 Windows AMD64..."
+          mkdir -p windows-amd64-package/etc
+          cp ${APP_NAME}-windows-amd64.exe windows-amd64-package/${APP_NAME}.exe
+          cp etc/config.yaml.sample windows-amd64-package/etc/config.yaml
+          cp README.md windows-amd64-package/ 2>/dev/null || true
+          cd windows-amd64-package && zip -r ../${APP_NAME}-${VERSION}-windows-amd64.zip . && cd ..
+
+          # Windows 386 包
+          echo "打包 Windows 386..."
+          mkdir -p windows-386-package/etc
+          cp ${APP_NAME}-windows-386.exe windows-386-package/${APP_NAME}.exe
+          cp etc/config.yaml.sample windows-386-package/etc/config.yaml
+          cp README.md windows-386-package/ 2>/dev/null || true
+          cd windows-386-package && zip -r ../${APP_NAME}-${VERSION}-windows-386.zip . && cd ..
 
           # 生成校验和
+          echo "生成校验和..."
           sha256sum *.tar.gz *.zip > checksums.txt
+
+          echo "打包完成，最终文件："
+          ls -la *.tar.gz *.zip checksums.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -71,16 +110,69 @@ jobs:
 
             ### 📦 下载
 
-            - **Linux AMD64**: `evm-grid-bot-${{ github.ref_name }}-linux-amd64.tar.gz`
-            - **Windows AMD64**: `evm-grid-bot-${{ github.ref_name }}-windows-amd64.zip`
+            #### Linux
+            - **Linux AMD64 (64位)**: `evm-grid-bot-${{ github.ref_name }}-linux-amd64.tar.gz`
+            - **Linux 386 (32位)**: `evm-grid-bot-${{ github.ref_name }}-linux-386.tar.gz`
+
+            #### Windows
+            - **Windows AMD64 (64位)**: `evm-grid-bot-${{ github.ref_name }}-windows-amd64.zip`
+            - **Windows 386 (32位)**: `evm-grid-bot-${{ github.ref_name }}-windows-386.zip`
 
             ### 🔧 使用方法
 
-            1. 下载对应平台的压缩包
-            2. 解压到目标目录
-            3. 修改 `etc/config.yaml` 配置文件
-            4. 运行可执行文件：
-               - Linux: `./evm-grid-bot -f etc/config.yaml`
-               - Windows: `./evm-grid-bot.exe -f etc/config.yaml`
+            1. 根据你的系统架构下载对应的压缩包：
+               - **64位系统**：选择 `amd64` 版本
+               - **32位系统**：选择 `386` 版本
+
+            2. 解压到目标目录：
+               ```bash
+               # Linux
+               tar -xzf evm-grid-bot-${{ github.ref_name }}-linux-*.tar.gz
+               
+               # Windows (使用解压软件或PowerShell)
+               Expand-Archive evm-grid-bot-${{ github.ref_name }}-windows-*.zip
+               ```
+
+            3. 修改配置文件：
+               ```bash
+               # 编辑 etc/config.yaml
+               ```
+
+            4. 运行程序：
+               ```bash
+               # Linux
+               chmod +x evm-grid-bot  # 如果需要
+               ./evm-grid-bot -f etc/config.yaml.local
+               
+               # Windows
+               ./evm-grid-bot.exe -f etc/config.yaml.local
+               ```
+
+            ### 🔍 如何确定系统架构
+
+            #### Linux
+            ```bash
+            uname -m
+            # x86_64 = 64位 (选择 amd64)
+            # i386, i686 = 32位 (选择 386)
+            ```
+
+            #### Windows
+            ```cmd
+            echo %PROCESSOR_ARCHITECTURE%
+            # AMD64 = 64位 (选择 amd64)
+            # x86 = 32位 (选择 386)
+            ```
+
+            ### 📋 文件校验
+
+            下载后可以使用 `checksums.txt` 验证文件完整性：
+            ```bash
+            # Linux/macOS
+            sha256sum -c checksums.txt
+
+            # Windows PowerShell
+            Get-FileHash *.zip | Format-Table
+            ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
