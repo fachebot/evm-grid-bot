@@ -1,0 +1,77 @@
+# 链配置
+Chain:
+  # 链ID
+  Id: 56
+  # RPC地址
+  RpcUrl: "https://1rpc.io/bnb"
+  # 原生代币配置
+  NativeCurrency:
+    Symbol: BNB
+    Decimals: 18
+  # 稳定币合约地址
+  StablecoinCA: "0x55d398326f99059fF775485246999027B3197955"
+  # 交易滑点Bps
+  SlippageBps: 250
+  # DEX聚合器(relay)
+  DexAggregator: relay
+
+# 数据API(gmgn/okx)
+Datapi: okx
+
+# Okx配置
+OkxWeb3:
+  Apikey:
+  Secretkey:
+  Passphrase:
+
+# 代理服务器配置
+Sock5Proxy:
+  Host: 127.0.0.1 # 代理服务器地址
+  Port: 10808 # 代理服务器端口
+  Enable: false # 是否启用代理
+
+# 电报机器人配置
+TelegramBot:
+  Debug: true
+  ApiToken: 7916072799:AAFb-C25RgEAxNClxqeRpTkmO6C8e7FhzLs
+  WhiteList: # 白名单列表，填写Telegram UserId(非白名单用户不允许使用机器人，如果白名单为空则所有人都可以使用)
+    - 993021715
+
+# 默认网格设置
+DefaultGridSettings:
+  OrderSize: 30 # 每格大小
+  MaxGridLimit: 10 # 最大网格数量
+  StopLossExit: 0 # 止损金额阈值
+  TakeProfitExit: 80 # 盈利目标金额
+  TakeProfitRatio: 6 # 止盈百分比(%)
+  EnableAutoExit: false # 跌破自动清仓
+  LastKlineVolume: 1000 # 最近交易量
+  FiveKlineVolume: 0 # 最近5分钟交易量
+  GlobalTakeProfitRatio: 0 # 全局止盈涨幅(%)
+  DropOn: false # 防瀑布开关
+  CandlesToCheck: 3 # 防瀑布K线根数
+  DropThreshold: 20 # 防瀑布跌幅阈值百分比(%)
+
+# 快速启动网格设置
+QuickStartSettings:
+  OrderSize: 30 # 每格大小
+  MaxGridLimit: 10 # 最大网格数量
+  StopLossExit: 0 # 止损金额阈值
+  TakeProfitExit: 80 # 盈利目标金额
+  TakeProfitRatio: 6 # 止盈百分比(%)
+  EnableAutoExit: false # 跌破自动清仓
+  LastKlineVolume: 1000 # 最近交易量
+  FiveKlineVolume: 0 # 最近5分钟交易量
+  UpperPriceBound: 0.0002 # 网格价格上限
+  LowerPriceBound: 0.00005 # 网格价格下限
+  GlobalTakeProfitRatio: 0 # 全局止盈涨幅(%)
+  DropOn: false # 防瀑布开关
+  CandlesToCheck: 3 # 防瀑布K线根数
+  DropThreshold: 20 # 防瀑布跌幅阈值百分比(%)
+
+# 创建代币策略的必要条件
+TokenRequirements:
+  MinMarketCap: 200000 # 最小代币市值
+  MinHolderCount: 1500 # 最小代币持有人数
+  MinTokenAgeMinutes: 240 # 最小代币年龄(分钟)
+  MaxTokenAgeMinutes: 960 # 最高代币年龄(分钟)
