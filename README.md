@@ -1,6 +1,6 @@
 # evm-grid-bot
 
-🤖 基于 Telegram 的 EVM 链代币网格交易机器人
+🤖 基于 Telegram 的 EVM 链网格交易机器人
 
 <img width="538" height="676" alt="image" src="https://github.com/user-attachments/assets/ede5635a-16f5-4a78-940e-5ff01bbbc00c" />
 
