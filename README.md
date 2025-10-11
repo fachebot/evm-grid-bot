@@ -10,6 +10,9 @@ EVMGridBot 是一个智能的网格交易机器人，通过 Telegram 接口为�
 
 > 💡 提示：此项目专为 EVM 链设计。对于 Solana 链交易，推荐使用 [TP Bot](https://t.me/follow_step_bot?start=cwqTcEV3)，[使用教程](https://tpbot-2.gitbook.io/tpbot/ce-le-xin-shou-jiao-cheng/wang-ge-ce-le)可供参考。EVMGridBot 的使用方式与 TP Bot 基本相同。
 
+- 🐛 Bug 报告：[Issues](https://github.com/fachebot/evm-grid-bot/issues)
+- 📧 使用交流：[电报群](https://t.me/+sRrZC-LVPAsyOWE1)
+
 ## ✨ 功能特性
 
 - 🚀 一键部署：无外部依赖，支持快速独立部署
@@ -209,11 +212,6 @@ Sock5Proxy:
 
 - 🔄 API 限制：注意各 API 服务的调用频率限制
 - 🛡️ 反爬虫机制：价格数据从 GMGN 和 OKX 抓取，如因反爬虫机制导致价格获取失败，可尝试修改配置文件 `Datapi` 选项
-
-## 🤝 支持与反馈
-
-- 🐛 Bug 报告：[Issues](https://github.com/fachebot/evm-grid-bot/issues)
-- 📧 使用交流：[电报群](https://t.me/+sRrZC-LVPAsyOWE1)
 
 ## 📄 免责声明
 
