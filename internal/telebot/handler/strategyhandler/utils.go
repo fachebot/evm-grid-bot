@@ -223,7 +223,7 @@ func GetStrategyDetailsText(ctx context.Context, svcCtx *svc.ServiceContext, rec
 	text = text + fmt.Sprintf("\n\n[OKX](%s) | [GMGN](%s) | [DEX Scanner](%s)",
 		utils.GetOkxTokenLink(chainId, record.Token), utils.GetGmgnTokenLink(chainId, record.Token), utils.GetDexscreenerTokenLink(chainId, record.Token))
 	text = text + fmt.Sprintf("\n\n📈 价格区间: *$%s ~ $%s*\n", record.LowerPriceBound.String(), record.UpperPriceBound.String())
-	text = text + fmt.Sprintf("⚙️ 单格投入: *%s 𝗨𝗦𝗗𝗖*\n", record.InitialOrderSize.String())
+	text = text + fmt.Sprintf("⚙️ 单格投入: *%s %s*\n", record.InitialOrderSize.String(), svcCtx.Config.Chain.StablecoinSymbol)
 	text = text + fmt.Sprintf("🔄 网格详情: *%d格 (%s%% 止盈)*\n", len(gridPrices), record.TakeProfitRatio.String())
 	text = text + fmt.Sprintf("💵 总利润: %s\n", reallzedProfit.Add(unreallzed).Truncate(2))
 	text = text + fmt.Sprintf("✅ 已实现利润: %s\n", reallzedProfit.Truncate(2))
