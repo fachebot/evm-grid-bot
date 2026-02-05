@@ -26,15 +26,14 @@ jobs:
         run: |
           # 安装交叉编译所需的 GCC
           sudo apt-get update
-          sudo apt-get install -y gcc-multilib gcc-mingw-w64
-          # 安装 32 位系统头文件（用于交叉编译 Linux 386）
-          sudo apt-get install -y linux-libc-dev:i386
+          sudo apt-get install -y gcc-mingw-w64
           # 注意：启动器只支持 Windows 版本，不需要安装 Linux GUI 库
+          # 注意：主程序只支持 Linux 64位和 Windows，不再支持 Linux 32位
 
       - name: Get dependencies
         run: go mod download
 
-      - name: Build for Windows and Linux (64-bit and 32-bit)
+      - name: Build for Windows and Linux
         run: |
           APP_NAME="evm-grid-bot"
           VERSION=${{ github.ref_name }}
@@ -44,10 +43,6 @@ jobs:
           # Linux AMD64 (64位) - 启用 CGO
           echo "构建 Linux AMD64..."
           CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-linux-amd64 .
-
-          # Linux 386 (32位) - 启用 CGO
-          echo "构建 Linux 386..."
-          CGO_ENABLED=1 GOOS=linux GOARCH=386 go build -ldflags="-X main.version=${VERSION}" -o ${APP_NAME}-linux-386 .
 
           # Windows AMD64 (64位) - 启用 CGO
           echo "构建 Windows AMD64..."
