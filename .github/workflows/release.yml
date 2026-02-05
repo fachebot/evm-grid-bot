@@ -27,6 +27,8 @@ jobs:
           # 安装交叉编译所需的 GCC
           sudo apt-get update
           sudo apt-get install -y gcc-multilib gcc-mingw-w64
+          # 安装 32 位系统头文件（用于交叉编译 Linux 386）
+          sudo apt-get install -y linux-libc-dev:i386
           # 注意：启动器只支持 Windows 版本，不需要安装 Linux GUI 库
 
       - name: Get dependencies
