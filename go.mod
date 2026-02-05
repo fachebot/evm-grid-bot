@@ -6,6 +6,7 @@ toolchain go1.24.2
 
 require (
 	entgo.io/ent v0.14.5
+	fyne.io/fyne/v2 v2.7.2
 	github.com/Danny-Dasilva/CycleTLS/cycletls v1.0.29
 	github.com/carlmjohnson/requests v0.25.1
 	github.com/dustin/go-humanize v1.0.1
@@ -28,6 +29,8 @@ require (
 
 require (
 	ariga.io/atlas v0.32.1-0.20250325101103-175b25e1c1b9 // indirect
+	fyne.io/systray v1.12.0 // indirect
+	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/Danny-Dasilva/fhttp v0.0.0-20240217042913-eeeb0b347ce1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
@@ -39,36 +42,61 @@ require (
 	github.com/consensys/gnark-crypto v0.18.0 // indirect
 	github.com/crate-crypto/go-eth-kzg v1.3.0 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deckarep/golang-set/v2 v2.6.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/ethereum/c-kzg-4844/v2 v2.1.0 // indirect
 	github.com/ethereum/go-verkle v0.2.2 // indirect
+	github.com/fredbi/uri v1.1.1 // indirect
+	github.com/fsnotify/fsnotify v1.9.0 // indirect
+	github.com/fyne-io/gl-js v0.2.0 // indirect
+	github.com/fyne-io/glfw-js v0.3.0 // indirect
+	github.com/fyne-io/image v0.1.1 // indirect
+	github.com/fyne-io/oksvg v0.2.0 // indirect
 	github.com/gaukas/clienthellod v0.4.2 // indirect
 	github.com/gaukas/godicttls v0.0.4 // indirect
+	github.com/go-gl/gl v0.0.0-20231021071112-07e5d0ea2e71 // indirect
+	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20240506104042-037f3cc74f2a // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-openapi/inflect v0.19.0 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
+	github.com/go-text/render v0.2.0 // indirect
+	github.com/go-text/typesetting v0.2.1 // indirect
+	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/pprof v0.0.0-20250630185457-6e76a2b096b5 // indirect
+	github.com/hack-pad/go-indexeddb v0.3.2 // indirect
+	github.com/hack-pad/safejs v0.1.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.18.1 // indirect
 	github.com/holiman/uint256 v1.3.2 // indirect
+	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade // indirect
+	github.com/jsummers/gobmp v0.0.0-20230614200233-a9de23ed2e25 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
+	github.com/nicksnyder/go-i18n/v2 v2.5.1 // indirect
 	github.com/onsi/ginkgo/v2 v2.23.4 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/quic-go/qpack v0.5.1 // indirect
 	github.com/quic-go/quic-go v0.53.0 // indirect
 	github.com/refraction-networking/uquic v0.0.6 // indirect
+	github.com/rymdport/portal v0.4.2 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
+	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c // indirect
+	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
+	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/supranational/blst v0.3.14 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
+	github.com/yuin/goldmark v1.7.8 // indirect
 	github.com/zclconf/go-cty v1.14.4 // indirect
 	github.com/zclconf/go-cty-yaml v1.1.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/mock v0.5.2 // indirect
 	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/exp v0.0.0-20250718183923-645b1fa84792 // indirect
+	golang.org/x/image v0.24.0 // indirect
 	golang.org/x/mod v0.27.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
