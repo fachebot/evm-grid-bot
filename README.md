@@ -43,20 +43,13 @@ EVMGridBot 是一个智能的网格交易机器人，通过 Telegram 接口为�
 
 **1. 下载启动器**
 
-前往 [Release 页面](https://github.com/fachebot/evm-grid-bot/releases) 下载对应系统架构的启动器压缩包：
-- **Linux 64位**：`launcher-v*-linux-amd64.tar.gz`
-- **Linux 32位**：`launcher-v*-linux-386.tar.gz`
+前往 [Release 页面](https://github.com/fachebot/evm-grid-bot/releases) 下载对应系统架构的启动器压缩包（仅支持 Windows）：
 - **Windows 64位**：`launcher-v*-windows-amd64.zip`
 - **Windows 32位**：`launcher-v*-windows-386.zip`
 
 **2. 解压并运行**
 
 ```bash
-# Linux
-tar -xzf launcher-v*-linux-amd64.tar.gz
-cd launcher-v*-linux-amd64
-./launcher
-
 # Windows
 # 解压 launcher-v*-windows-amd64.zip 后，双击 launcher.exe
 ```
