@@ -27,6 +27,8 @@ jobs:
           # 安装交叉编译所需的 GCC
           sudo apt-get update
           sudo apt-get install -y gcc-multilib gcc-mingw-w64
+          # 安装 Fyne GUI 框架所需的依赖（用于编译启动器）
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev libx11-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev libglu1-mesa-dev libxext-dev libxfixes-dev
 
       - name: Get dependencies
         run: go mod download
