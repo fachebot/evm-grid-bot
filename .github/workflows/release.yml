@@ -27,14 +27,7 @@ jobs:
           # 安装交叉编译所需的 GCC
           sudo apt-get update
           sudo apt-get install -y gcc-multilib gcc-mingw-w64
-          # 安装 Fyne GUI 框架所需的依赖（用于编译启动器）
-          # 64位库
-          sudo apt-get install -y libgl1-mesa-dev xorg-dev libx11-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev libglu1-mesa-dev libxext-dev libxfixes-dev
-          # 32位交叉编译工具链和库（用于交叉编译 386 架构）
-          sudo dpkg --add-architecture i386
-          sudo apt-get update
-          sudo apt-get install -y gcc-i686-linux-gnu g++-i686-linux-gnu
-          sudo apt-get install -y libgl1-mesa-dev:i386 libx11-dev:i386 libxcursor-dev:i386 libxrandr-dev:i386 libxinerama-dev:i386 libxi-dev:i386 libglu1-mesa-dev:i386 libxext-dev:i386 libxfixes-dev:i386 libxxf86vm-dev:i386 || echo "32位库安装失败，将跳过 32 位构建"
+          # 注意：启动器只支持 Windows 版本，不需要安装 Linux GUI 库
 
       - name: Get dependencies
         run: go mod download
@@ -65,22 +58,12 @@ jobs:
           echo "构建完成，文件列表："
           ls -la ${APP_NAME}-*
 
-      - name: Build Launcher for Windows and Linux (64-bit and 32-bit)
+      - name: Build Launcher for Windows (64-bit and 32-bit)
         run: |
           LAUNCHER_NAME="launcher"
           VERSION=${{ github.ref_name }}
 
           echo "开始构建 ${LAUNCHER_NAME} 版本 ${VERSION}"
-
-          # Linux AMD64 (64位) - Fyne 需要 CGO
-          echo "构建 Launcher Linux AMD64..."
-          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags="-X main.version=${VERSION}" -o ${LAUNCHER_NAME}-linux-amd64 ./cmd/launcher
-
-          # Linux 386 (32位) - Fyne 需要 CGO
-          # 注意：Fyne GUI 应用交叉编译到 32 位 Linux 比较复杂，可能需要 32 位库
-          # 如果编译失败，可以考虑只提供 64 位版本
-          echo "构建 Launcher Linux 386..."
-          CGO_ENABLED=1 GOOS=linux GOARCH=386 PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig CC=i686-linux-gnu-gcc go build -ldflags="-X main.version=${VERSION}" -o ${LAUNCHER_NAME}-linux-386 ./cmd/launcher || echo "警告：Linux 386 构建失败，跳过"
 
           # Windows AMD64 (64位) - Fyne 需要 CGO
           echo "构建 Launcher Windows AMD64..."
@@ -222,11 +205,7 @@ jobs:
             - **Windows AMD64 (64位)**: `evm-grid-bot-${{ github.ref_name }}-windows-amd64.zip`
             - **Windows 386 (32位)**: `evm-grid-bot-${{ github.ref_name }}-windows-386.zip`
 
-            ### 🚀 启动器 (Launcher)
-
-            #### Linux
-            - **Linux AMD64 (64位)**: `launcher-${{ github.ref_name }}-linux-amd64.tar.gz`
-            - **Linux 386 (32位)**: `launcher-${{ github.ref_name }}-linux-386.tar.gz`
+            ### 🚀 启动器 (Launcher) - Windows 版本
 
             #### Windows
             - **Windows AMD64 (64位)**: `launcher-${{ github.ref_name }}-windows-amd64.zip`
