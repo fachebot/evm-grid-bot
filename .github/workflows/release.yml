@@ -89,15 +89,6 @@ jobs:
           cp README.md ${LINUX_AMD64_DIR}/ 2>/dev/null || true
           tar -czf ${LINUX_AMD64_DIR}.tar.gz ${LINUX_AMD64_DIR}
 
-          # Linux 386 包 - 创建顶级目录结构
-          echo "打包 Linux 386..."
-          LINUX_386_DIR="${APP_NAME}-${VERSION}-linux-386"
-          mkdir -p ${LINUX_386_DIR}/etc
-          cp ${APP_NAME}-linux-386 ${LINUX_386_DIR}/${APP_NAME}
-          cp etc/config.yaml.sample ${LINUX_386_DIR}/etc/config.yaml
-          cp README.md ${LINUX_386_DIR}/ 2>/dev/null || true
-          tar -czf ${LINUX_386_DIR}.tar.gz ${LINUX_386_DIR}
-
           # Windows AMD64 包 - 创建顶级目录结构
           echo "打包 Windows AMD64..."
           WINDOWS_AMD64_DIR="${APP_NAME}-${VERSION}-windows-amd64"
@@ -196,7 +187,6 @@ jobs:
 
             #### Linux
             - **Linux AMD64 (64位)**: `evm-grid-bot-${{ github.ref_name }}-linux-amd64.tar.gz`
-            - **Linux 386 (32位)**: `evm-grid-bot-${{ github.ref_name }}-linux-386.tar.gz`
 
             #### Windows
             - **Windows AMD64 (64位)**: `evm-grid-bot-${{ github.ref_name }}-windows-amd64.zip`
