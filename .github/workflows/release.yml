@@ -109,7 +109,7 @@ jobs:
 
           # 清理临时目录
           echo "清理临时目录..."
-          rm -rf ${LINUX_AMD64_DIR} ${LINUX_386_DIR} ${WINDOWS_AMD64_DIR} ${WINDOWS_386_DIR}
+          rm -rf ${LINUX_AMD64_DIR} ${WINDOWS_AMD64_DIR} ${WINDOWS_386_DIR}
 
           # 生成校验和
           echo "生成校验和..."
@@ -124,24 +124,6 @@ jobs:
           VERSION=${{ github.ref_name }}
 
           echo "创建 Launcher 发布包..."
-
-          # Linux AMD64 Launcher 包
-          echo "打包 Launcher Linux AMD64..."
-          LINUX_AMD64_DIR="${LAUNCHER_NAME}-${VERSION}-linux-amd64"
-          mkdir -p ${LINUX_AMD64_DIR}/etc
-          cp ${LAUNCHER_NAME}-linux-amd64 ${LINUX_AMD64_DIR}/${LAUNCHER_NAME}
-          cp etc/config.yaml.sample ${LINUX_AMD64_DIR}/etc/config.yaml.sample
-          cp README.md ${LINUX_AMD64_DIR}/ 2>/dev/null || true
-          tar -czf ${LINUX_AMD64_DIR}.tar.gz ${LINUX_AMD64_DIR}
-
-          # Linux 386 Launcher 包
-          echo "打包 Launcher Linux 386..."
-          LINUX_386_DIR="${LAUNCHER_NAME}-${VERSION}-linux-386"
-          mkdir -p ${LINUX_386_DIR}/etc
-          cp ${LAUNCHER_NAME}-linux-386 ${LINUX_386_DIR}/${LAUNCHER_NAME}
-          cp etc/config.yaml.sample ${LINUX_386_DIR}/etc/config.yaml.sample
-          cp README.md ${LINUX_386_DIR}/ 2>/dev/null || true
-          tar -czf ${LINUX_386_DIR}.tar.gz ${LINUX_386_DIR}
 
           # Windows AMD64 Launcher 包
           echo "打包 Launcher Windows AMD64..."
@@ -163,14 +145,14 @@ jobs:
 
           # 清理临时目录
           echo "清理临时目录..."
-          rm -rf ${LINUX_AMD64_DIR} ${LINUX_386_DIR} ${WINDOWS_AMD64_DIR} ${WINDOWS_386_DIR}
+          rm -rf ${WINDOWS_AMD64_DIR} ${WINDOWS_386_DIR}
 
           # 更新校验和
           echo "更新校验和..."
-          sha256sum ${LAUNCHER_NAME}-*.tar.gz ${LAUNCHER_NAME}-*.zip >> checksums.txt
+          sha256sum ${LAUNCHER_NAME}-*.zip >> checksums.txt
 
           echo "Launcher 打包完成，最终文件："
-          ls -la ${LAUNCHER_NAME}-*.tar.gz ${LAUNCHER_NAME}-*.zip
+          ls -la ${LAUNCHER_NAME}-*.zip
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
