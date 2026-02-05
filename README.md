@@ -15,7 +15,10 @@ EVMGridBot 是一个智能的网格交易机器人，通过 Telegram 接口为�
 
 ## ✨ 功能特性
 
-- 🚀 一键部署：无外部依赖，支持快速独立部署
+- 🚀 **图形化启动器**：提供友好的图形界面，无需命令行操作即可配置和启动
+- ⚙️ **配置管理**：可视化配置 RPC URL、OKX API、Telegram Bot，支持配置验证
+- 📦 **自动更新**：启动器自动检测并下载最新版本
+- 📋 **日志查看**：实时查看程序运行日志，支持级别过滤
 - 🔗 BSC 链支持：专为币安智能链优化的交易体验
 - 🎯 智能网格交易：在用户设定的价格区间内自动执行低买高卖策略
 - 🔗 稳定币交易：使用 USDT（可配置）交易代币，避免主币波动风险
@@ -34,14 +37,52 @@ EVMGridBot 是一个智能的网格交易机器人，通过 Telegram 接口为�
 
 ## 🚀 快速开始
 
-> 📌 **普通用户提示**：如果您不是开发者，可以直接跳过下面的编译步骤，前往 [Release 页面](https://github.com/fachebot/evm-grid-bot/releases) 下载最新版本的可执行文件，然后直接查看 [配置说明](#⚙️-配置说明) 部分，修改配置文件后即可运行。
+### 💡 推荐方式：使用启动器（适合普通用户）
 
-### 环境要求
+> 📌 **强烈推荐**：对于普通用户，我们强烈建议使用图形化启动器，它提供了友好的界面和自动配置功能，无需手动编辑配置文件。
+
+**1. 下载启动器**
+
+前往 [Release 页面](https://github.com/fachebot/evm-grid-bot/releases) 下载对应系统架构的启动器压缩包：
+- **Linux 64位**：`launcher-v*-linux-amd64.tar.gz`
+- **Linux 32位**：`launcher-v*-linux-386.tar.gz`
+- **Windows 64位**：`launcher-v*-windows-amd64.zip`
+- **Windows 32位**：`launcher-v*-windows-386.zip`
+
+**2. 解压并运行**
+
+```bash
+# Linux
+tar -xzf launcher-v*-linux-amd64.tar.gz
+cd launcher-v*-linux-amd64
+./launcher
+
+# Windows
+# 解压 launcher-v*-windows-amd64.zip 后，双击 launcher.exe
+```
+
+**3. 配置并启动**
+
+1. 启动器会自动检测并下载最新版本的机器人程序（如果不存在）
+2. 在启动器界面中配置以下核心配置项：
+   - **RPC URL**：BSC 链的 RPC 地址（点击"修改"按钮进行配置和验证）
+   - **OKX API**：OKX Web3 API 密钥（点击"修改"按钮进行配置和验证）
+   - **Telegram Bot**：Telegram 机器人 Token（点击"修改"按钮进行配置和验证）
+3. 配置验证成功后，点击"启动"按钮运行机器人
+4. 在"运行日志"区域查看程序运行状态
+
+> 💡 **提示**：启动器提供了详细的配置引导，包括如何获取 RPC URL、OKX API 密钥和 Telegram Bot Token 的完整步骤。
+
+### 🔧 直接运行程序（适合开发者）
+
+如果您是开发者或需要从源码编译，可以按照以下步骤操作：
+
+**环境要求**
 
 - Git
 - Go 1.24.1 或更高版本
 
-### 安装部署
+**安装部署**
 
 **1. 克隆项目**
 
@@ -65,15 +106,45 @@ go build
 
 ```bash
 # linux
-./evm-grid-bot
+./evm-grid-bot -f etc/config.yaml
 
 # windows
-./evm-grid-bot.exe
+./evm-grid-bot.exe -f etc/config.yaml
 ```
 
 > ⚠️ 重要：运行项目前需要创建配置文件，请查看下面的配置说明。
 
 ### ⚙️ 配置说明
+
+#### 使用启动器配置（推荐）
+
+启动器提供了图形化配置界面，您可以通过以下方式配置：
+
+1. **RPC URL 配置**：
+   - 点击 RPC URL 配置项后的"修改"按钮
+   - 输入 BSC RPC 地址
+   - 点击"验证"按钮验证 RPC 地址有效性
+   - 验证成功后显示链 ID
+   - 点击"保存"保存配置
+
+2. **OKX API 配置**：
+   - 点击 OKX API 配置项后的"修改"按钮
+   - 输入 API Key、Secret Key 和 Passphrase
+   - 点击"验证"按钮验证 API 密钥
+   - 验证成功后点击"保存"保存配置
+   - ⚠️ **重要**：创建 API 密钥前，请确保已在 OKX 开发者平台绑定邮箱和手机号码
+
+3. **Telegram Bot 配置**：
+   - 点击 Telegram Bot 配置项后的"修改"按钮
+   - 按照对话框中的详细步骤创建 Bot 并获取 Token
+   - 输入 Bot Token
+   - 点击"验证"按钮验证 Token
+   - 验证成功后显示 Bot 用户名
+   - 点击"保存"保存配置
+
+> 💡 **提示**：启动器会自动将配置保存到 `etc/config.yaml` 文件中，您也可以点击"📝 打开配置"按钮手动编辑配置文件。
+
+#### 手动配置（直接运行程序）
 
 在运行项目前，需要创建配置文件 `etc/config.yaml`，你可以复制 [etc/config.yaml.sample](etc/config.yaml.sample) 文件到 `etc/config.yaml` 并进行修改：
 
@@ -194,6 +265,19 @@ Sock5Proxy:
   Port: 10808
   Enable: true # 设置为 true 启用代理
 ```
+
+## 📖 启动器功能说明
+
+启动器（Launcher）是一个图形化界面工具，提供了以下功能：
+
+- **程序管理**：一键启动和停止机器人程序
+- **配置管理**：图形化界面配置核心配置项，支持实时验证
+- **版本管理**：自动检测最新版本，支持自动下载
+- **日志查看**：实时查看程序运行日志，支持级别过滤和自动滚动
+- **配置验证**：自动验证 RPC URL、OKX API 和 Telegram Bot 配置的有效性
+- **配置引导**：提供详细的配置步骤说明，帮助用户快速上手
+
+更多启动器使用说明，请查看 [启动器 README](cmd/launcher/README.md)。
 
 ## ⚠️ 重要注意事项
 

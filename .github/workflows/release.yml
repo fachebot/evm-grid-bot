@@ -57,6 +57,32 @@ jobs:
           echo "构建完成，文件列表："
           ls -la ${APP_NAME}-*
 
+      - name: Build Launcher for Windows and Linux (64-bit and 32-bit)
+        run: |
+          LAUNCHER_NAME="launcher"
+          VERSION=${{ github.ref_name }}
+
+          echo "开始构建 ${LAUNCHER_NAME} 版本 ${VERSION}"
+
+          # Linux AMD64 (64位) - Fyne 需要 CGO
+          echo "构建 Launcher Linux AMD64..."
+          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags="-X main.version=${VERSION}" -o ${LAUNCHER_NAME}-linux-amd64 ./cmd/launcher
+
+          # Linux 386 (32位) - Fyne 需要 CGO
+          echo "构建 Launcher Linux 386..."
+          CGO_ENABLED=1 GOOS=linux GOARCH=386 go build -ldflags="-X main.version=${VERSION}" -o ${LAUNCHER_NAME}-linux-386 ./cmd/launcher
+
+          # Windows AMD64 (64位) - Fyne 需要 CGO
+          echo "构建 Launcher Windows AMD64..."
+          CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -ldflags="-X main.version=${VERSION}" -o ${LAUNCHER_NAME}-windows-amd64.exe ./cmd/launcher
+
+          # Windows 386 (32位) - Fyne 需要 CGO
+          echo "构建 Launcher Windows 386..."
+          CGO_ENABLED=1 GOOS=windows GOARCH=386 CC=i686-w64-mingw32-gcc go build -ldflags="-X main.version=${VERSION}" -o ${LAUNCHER_NAME}-windows-386.exe ./cmd/launcher
+
+          echo "Launcher 构建完成，文件列表："
+          ls -la ${LAUNCHER_NAME}-*
+
       - name: Create release packages
         run: |
           APP_NAME="evm-grid-bot"
@@ -111,6 +137,60 @@ jobs:
           echo "打包完成，最终文件："
           ls -la *.tar.gz *.zip checksums.txt
 
+      - name: Create Launcher release packages
+        run: |
+          LAUNCHER_NAME="launcher"
+          VERSION=${{ github.ref_name }}
+
+          echo "创建 Launcher 发布包..."
+
+          # Linux AMD64 Launcher 包
+          echo "打包 Launcher Linux AMD64..."
+          LINUX_AMD64_DIR="${LAUNCHER_NAME}-${VERSION}-linux-amd64"
+          mkdir -p ${LINUX_AMD64_DIR}/etc
+          cp ${LAUNCHER_NAME}-linux-amd64 ${LINUX_AMD64_DIR}/${LAUNCHER_NAME}
+          cp etc/config.yaml.sample ${LINUX_AMD64_DIR}/etc/config.yaml.sample
+          cp README.md ${LINUX_AMD64_DIR}/ 2>/dev/null || true
+          tar -czf ${LINUX_AMD64_DIR}.tar.gz ${LINUX_AMD64_DIR}
+
+          # Linux 386 Launcher 包
+          echo "打包 Launcher Linux 386..."
+          LINUX_386_DIR="${LAUNCHER_NAME}-${VERSION}-linux-386"
+          mkdir -p ${LINUX_386_DIR}/etc
+          cp ${LAUNCHER_NAME}-linux-386 ${LINUX_386_DIR}/${LAUNCHER_NAME}
+          cp etc/config.yaml.sample ${LINUX_386_DIR}/etc/config.yaml.sample
+          cp README.md ${LINUX_386_DIR}/ 2>/dev/null || true
+          tar -czf ${LINUX_386_DIR}.tar.gz ${LINUX_386_DIR}
+
+          # Windows AMD64 Launcher 包
+          echo "打包 Launcher Windows AMD64..."
+          WINDOWS_AMD64_DIR="${LAUNCHER_NAME}-${VERSION}-windows-amd64"
+          mkdir -p ${WINDOWS_AMD64_DIR}/etc
+          cp ${LAUNCHER_NAME}-windows-amd64.exe ${WINDOWS_AMD64_DIR}/${LAUNCHER_NAME}.exe
+          cp etc/config.yaml.sample ${WINDOWS_AMD64_DIR}/etc/config.yaml.sample
+          cp README.md ${WINDOWS_AMD64_DIR}/ 2>/dev/null || true
+          zip -r ${WINDOWS_AMD64_DIR}.zip ${WINDOWS_AMD64_DIR}
+
+          # Windows 386 Launcher 包
+          echo "打包 Launcher Windows 386..."
+          WINDOWS_386_DIR="${LAUNCHER_NAME}-${VERSION}-windows-386"
+          mkdir -p ${WINDOWS_386_DIR}/etc
+          cp ${LAUNCHER_NAME}-windows-386.exe ${WINDOWS_386_DIR}/${LAUNCHER_NAME}.exe
+          cp etc/config.yaml.sample ${WINDOWS_386_DIR}/etc/config.yaml.sample
+          cp README.md ${WINDOWS_386_DIR}/ 2>/dev/null || true
+          zip -r ${WINDOWS_386_DIR}.zip ${WINDOWS_386_DIR}
+
+          # 清理临时目录
+          echo "清理临时目录..."
+          rm -rf ${LINUX_AMD64_DIR} ${LINUX_386_DIR} ${WINDOWS_AMD64_DIR} ${WINDOWS_386_DIR}
+
+          # 更新校验和
+          echo "更新校验和..."
+          sha256sum ${LAUNCHER_NAME}-*.tar.gz ${LAUNCHER_NAME}-*.zip >> checksums.txt
+
+          echo "Launcher 打包完成，最终文件："
+          ls -la ${LAUNCHER_NAME}-*.tar.gz ${LAUNCHER_NAME}-*.zip
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -132,8 +212,27 @@ jobs:
             - **Windows AMD64 (64位)**: `evm-grid-bot-${{ github.ref_name }}-windows-amd64.zip`
             - **Windows 386 (32位)**: `evm-grid-bot-${{ github.ref_name }}-windows-386.zip`
 
+            ### 🚀 启动器 (Launcher)
+
+            #### Linux
+            - **Linux AMD64 (64位)**: `launcher-${{ github.ref_name }}-linux-amd64.tar.gz`
+            - **Linux 386 (32位)**: `launcher-${{ github.ref_name }}-linux-386.tar.gz`
+
+            #### Windows
+            - **Windows AMD64 (64位)**: `launcher-${{ github.ref_name }}-windows-amd64.zip`
+            - **Windows 386 (32位)**: `launcher-${{ github.ref_name }}-windows-386.zip`
+
             ### 🔧 使用方法
 
+            #### 使用启动器（推荐）
+            1. 根据你的系统架构下载对应的 Launcher 压缩包
+            2. 解压到目标目录
+            3. 运行启动器：
+               - Linux: `./launcher`
+               - Windows: `./launcher.exe`
+            4. 在启动器界面中配置并启动程序
+
+            #### 直接运行程序
             1. 根据你的系统架构下载对应的压缩包
             2. 解压到目标目录
             3. 修改 `etc/config.yaml` 配置文件
