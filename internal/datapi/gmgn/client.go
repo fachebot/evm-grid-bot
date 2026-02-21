@@ -22,11 +22,14 @@ import (
 	"github.com/google/uuid"
 )
 
+// GMGN API基础URL
 var (
 	GmgnAIBaseURL  = "https://gmgn.ai"
 	fakeDeviceInfo = ""
 )
 
+// getDeviceInfo 生成设备信息参数
+// 用于模拟浏览器访问时的设备指纹
 func getDeviceInfo() (string, error) {
 	deviceId, err := uuid.NewRandom()
 	if err != nil {
@@ -60,28 +63,33 @@ func init() {
 	}
 }
 
+// Client GMGN API客户端
 type Client struct {
-	chain      string
-	proxy      config.Sock5Proxy
-	httpClient *http.Client
+	chain      string            // 链名称 (bsc, base等)
+	proxy      config.Sock5Proxy // SOCKS5代理配置
+	httpClient *http.Client      // HTTP客户端
 }
 
+// NewClient 创建GMGN客户端实例
+// chainId: 链ID (56=BSC, 8453=Base等)
+// proxy: SOCKS5代理配置
 func NewClient(chainId int64, proxy config.Sock5Proxy) (*Client, error) {
 	chain, ok := ChainIdToChainName(chainId)
 	if !ok {
 		return nil, errors.New("unsupported chain")
 	}
 
+	// 使用surf库创建支持浏览器指纹的HTTP客户端
 	surfClient := surf.NewClient()
 	if proxy.Enable {
 		surfClient.Builder().Proxy(g.String(fmt.Sprintf("socks5://%s:%d", proxy.Host, proxy.Port)))
 	}
 	httpClient := surfClient.Builder().
-		Impersonate().
-		Chrome().
+		Impersonate(). // 模拟浏览器
+		Chrome().      // 使用Chrome指纹
 		Build().
 		Unwrap().
-		Std()
+		Std() // 转换为标准http.Client
 
 	return &Client{
 		chain:      chain,
@@ -90,6 +98,8 @@ func NewClient(chainId int64, proxy config.Sock5Proxy) (*Client, error) {
 	}, nil
 }
 
+// getHeaders 获取HTTP请求头
+// referer: referer来源URL
 func (c *Client) getHeaders(referer string) map[string]string {
 	headers := map[string]string{
 		"accept":          "application/json, text/plain, */*",
@@ -102,6 +112,12 @@ func (c *Client) getHeaders(referer string) map[string]string {
 	return headers
 }
 
+// doRequest 执行HTTP请求
+// ctx: 上下文
+// url: 请求URL
+// method: HTTP方法
+// bodyJson: 请求体JSON对象
+// referer: referer来源
 func (c *Client) doRequest(ctx context.Context, url, method string, bodyJson any, referer string) (string, error) {
 	var body io.Reader
 	if bodyJson != nil {
@@ -140,6 +156,7 @@ func (c *Client) doRequest(ctx context.Context, url, method string, bodyJson any
 	return string(respBody), nil
 }
 
+// parseGmgnResponse 解析GMGN API响应
 func (c *Client) parseGmgnResponse(responseBody string) (*gmgnResponse, error) {
 	var res gmgnResponse
 	if err := json.Unmarshal([]byte(responseBody), &res); err != nil {
@@ -153,6 +170,7 @@ func (c *Client) parseGmgnResponse(responseBody string) (*gmgnResponse, error) {
 	return &res, nil
 }
 
+// convertToOhlcData 将GMGN K线数据转换为标准格式
 func (c *Client) convertToOhlcData(gmgnData []gmgnOhlc) []charts.Ohlc {
 	ohlcs := make([]charts.Ohlc, 0, len(gmgnData))
 	for _, item := range gmgnData {
@@ -169,6 +187,12 @@ func (c *Client) convertToOhlcData(gmgnData []gmgnOhlc) []charts.Ohlc {
 	return ohlcs
 }
 
+// FetchTokenCandles 获取代币K线数据
+// ctx: 上下文
+// token: 代币地址
+// to: 结束时间
+// period: K线周期 (1h, 15m等)
+// limit: 返回数量限制
 func (c *Client) FetchTokenCandles(ctx context.Context, token string, to time.Time, period string, limit int) ([]charts.Ohlc, error) {
 	intervalD, err := charts.ResolutionToDuration(period)
 	if err != nil {
@@ -200,6 +224,9 @@ func (c *Client) FetchTokenCandles(ctx context.Context, token string, to time.Ti
 	return result, nil
 }
 
+// FetchTokenHolders 获取代币持有者列表
+// ctx: 上下文
+// token: 代币地址
 func (c *Client) FetchTokenHolders(ctx context.Context, token string) ([]*HolderInfo, error) {
 	url := fmt.Sprintf("%s/vas/api/v1/token_holders/%s/%s?%s&limit=100&cost=20orderby=amount_percentage&direction=desc",
 		GmgnAIBaseURL, c.chain, token, fakeDeviceInfo)
@@ -223,6 +250,9 @@ func (c *Client) FetchTokenHolders(ctx context.Context, token string) ([]*Holder
 	return holders.List, nil
 }
 
+// FetchWalletHoldings 获取钱包持仓列表
+// ctx: 上下文
+// wallet: 钱包地址
 func (c *Client) FetchWalletHoldings(ctx context.Context, wallet string) ([]*WalletHolding, error) {
 	url := fmt.Sprintf("%s/api/v1/wallet_holdings/%s/%s?%s&limit=50&orderby=last_active_timestamp&direction=desc&showsmall=false&sellout=false&hide_airdrop=true&hide_abnormal=false",
 		GmgnAIBaseURL, c.chain, wallet, fakeDeviceInfo)
@@ -246,6 +276,9 @@ func (c *Client) FetchWalletHoldings(ctx context.Context, wallet string) ([]*Wal
 	return holdings.Holdings, nil
 }
 
+// FetchTrendingToken1H 获取1小时内热门代币
+// ctx: 上下文
+// tokenFilter: 代币过滤条件
 func (c *Client) FetchTrendingToken1H(ctx context.Context, tokenFilter TokenFilter) (*TrendingTokens, error) {
 	params := []string{
 		"orderby=renowned_count",

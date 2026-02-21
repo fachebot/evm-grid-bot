@@ -6,6 +6,7 @@ import (
 	utls "github.com/refraction-networking/utls"
 )
 
+// 支持的TLS指纹客户端列表
 var (
 	clientHelloIDs = []utls.ClientHelloID{
 		utls.HelloChrome_Auto,
@@ -17,10 +18,15 @@ var (
 	}
 )
 
+// RandomClientHelloID 随机返回一个TLS指纹客户端ID
+// 用于模拟不同浏览器的TLS握手特征
 func RandomClientHelloID() utls.ClientHelloID {
 	return clientHelloIDs[rand.Intn(len(clientHelloIDs))]
 }
 
+// ChainIdToChainIndex 将链ID转换为链索引
+// chainId: 链ID
+// 返回: 链索引字符串, 是否支持
 func ChainIdToChainIndex(chainId int64) (string, bool) {
 	switch chainId {
 	case 56:
