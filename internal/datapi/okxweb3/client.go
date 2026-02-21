@@ -1,34 +1,30 @@
 package okxweb3
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"slices"
 	"time"
 
+	"github.com/enetx/g"
+	"github.com/enetx/surf"
 	"github.com/fachebot/evm-grid-bot/internal/charts"
 	"github.com/fachebot/evm-grid-bot/internal/config"
 
-	"github.com/Danny-Dasilva/CycleTLS/cycletls"
 	"github.com/shopspring/decimal"
 )
 
-const (
-	// API endpoints
-	okxBaseURL = "https://web3.okx.com"
-
-	// HTTP headers
-	defaultJA3       = "771,4865-4867-4866-49195-49199-52393-52392-49196-49200-49162-49161-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-51-43-13-45-28-21,29-23-24-25-256-257,0"
-	defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
-)
+var OkxBaseURL = "https://web3.okx.com"
 
 type Client struct {
 	chainIndex string
 	proxy      config.Sock5Proxy
-	httpClient cycletls.CycleTLS
+	httpClient *http.Client
 }
 
 func NewClient(chainId int64, proxy config.Sock5Proxy) (*Client, error) {
@@ -37,87 +33,74 @@ func NewClient(chainId int64, proxy config.Sock5Proxy) (*Client, error) {
 		return nil, errors.New("unsupported chain")
 	}
 
+	surfClient := surf.NewClient()
+	if proxy.Enable {
+		surfClient.Builder().Proxy(g.String(fmt.Sprintf("socks5://%s:%d", proxy.Host, proxy.Port)))
+	}
+	httpClient := surfClient.Builder().
+		Impersonate().
+		Chrome().
+		Build().
+		Unwrap().
+		Std()
+
 	return &Client{
 		chainIndex: chainIndex,
 		proxy:      proxy,
-		httpClient: cycletls.Init(),
+		httpClient: httpClient,
 	}, nil
 }
 
-// getProxyURL 获取代理URL
-func (c *Client) getProxyURL() string {
-	if !c.proxy.Enable {
-		return ""
+func (c *Client) getHeaders(referer string) map[string]string {
+	headers := map[string]string{
+		"accept":          "application/json, text/plain, */*",
+		"accept-language": "zh-CN,zh;q=0.9",
+		"accept-encoding": "gzip, deflate, br",
 	}
-	return fmt.Sprintf("socks5://%s:%d", c.proxy.Host, c.proxy.Port)
-}
-
-// getCommonHeaders 获取通用请求头
-func (c *Client) getCommonHeaders() map[string]string {
-	return map[string]string{
-		"accept":                      "application/json, text/plain, */*",
-		"accept-language":             "zh-CN,zh;q=0.9",
-		"accept-encoding":             "gzip,deflate,br",
-		"priority":                    "u=1, i",
-		"sec-ch-ua":                   `"Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"`,
-		"sec-ch-ua-arch":              `"x86"`,
-		"sec-ch-ua-bitness":           `"64"`,
-		"sec-ch-ua-full-version":      `"136.0.7103.93"`,
-		"sec-ch-ua-full-version-list": `"Chromium";v="136.0.7103.93", "Google Chrome";v="136.0.7103.93", "Not.A/Brand";v="99.0.0.0"`,
-		"sec-ch-ua-mobile":            `?0`,
-		"sec-ch-ua-model":             `""`,
-		"sec-ch-ua-platform":          `"Windows"`,
-		"sec-ch-ua-platform-version":  `"Windows"`,
-		"sec-fetch-dest":              `empty`,
-		"sec-fetch-mode":              `cors`,
-		"sec-fetch-site":              `same-origin`,
-	}
-}
-
-// getRequestOptions 获取请求选项
-func (c *Client) getRequestOptions(referer string) cycletls.Options {
-	headers := c.getCommonHeaders()
 	if referer != "" {
 		headers["referer"] = referer
 	}
-
-	return cycletls.Options{
-		Proxy:     c.getProxyURL(),
-		Ja3:       defaultJA3,
-		UserAgent: defaultUserAgent,
-		Headers:   headers,
-	}
+	return headers
 }
 
-// doRequest 执行HTTP请求并处理响应
 func (c *Client) doRequest(ctx context.Context, url, method string, bodyJson any, referer string) (string, error) {
-	var body []byte
+	var body io.Reader
 	if bodyJson != nil {
-		var err error
-		body, err = json.Marshal(bodyJson)
+		data, err := json.Marshal(bodyJson)
 		if err != nil {
 			return "", err
 		}
+		body = bytes.NewBuffer(data)
 	}
 
-	options := c.getRequestOptions(referer)
-	if body != nil {
-		options.Body = string(body)
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
+	if err != nil {
+		return "", err
 	}
 
-	response, err := c.httpClient.Do(url, options, method)
+	headers := c.getHeaders(referer)
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("request failed: %w", err)
 	}
+	defer resp.Body.Close()
 
-	if response.Status < 200 || response.Status >= 300 {
-		return "", fmt.Errorf("http status: %d", response.Status)
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
 	}
 
-	return response.Body, nil
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return "", fmt.Errorf("http status: %d", resp.StatusCode)
+	}
+
+	return string(respBody), nil
 }
 
-// parseGmgnResponse 解析OKX响应
 func (c *Client) parseOkxResponse(responseBody string) (*okxResponse, error) {
 	var res okxResponse
 	if err := json.Unmarshal([]byte(responseBody), &res); err != nil {
@@ -138,7 +121,7 @@ func (c *Client) FetchTokenCandles(ctx context.Context, token string, to time.Ti
 	}
 
 	url := fmt.Sprintf("%s/priapi/v5/dex/token/market/dex-token-hlc-candles?chainId=%s&address=%s&after=%d&bar=%s&limit=%d&t=%d",
-		okxBaseURL, c.chainIndex, token, to.UnixMilli(), interval, limit, time.Now().Unix())
+		OkxBaseURL, c.chainIndex, token, to.UnixMilli(), interval, limit, time.Now().Unix())
 
 	response, err := c.doRequest(ctx, url, http.MethodGet, nil, "https://web3.okx.com/")
 	if err != nil {

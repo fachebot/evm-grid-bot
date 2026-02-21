@@ -1,34 +1,29 @@
 package gmgn
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/enetx/g"
+	"github.com/enetx/surf"
 	"github.com/fachebot/evm-grid-bot/internal/charts"
 	"github.com/fachebot/evm-grid-bot/internal/config"
 
-	"github.com/Danny-Dasilva/CycleTLS/cycletls"
 	"github.com/google/uuid"
 )
 
-const (
-	// API endpoints
-	gmgnAIBaseURL = "https://gmgn.ai"
-
-	// HTTP headers
-	defaultJA3       = "771,4865-4867-4866-49195-49199-52393-52392-49196-49200-49162-49161-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-51-43-13-45-28-21,29-23-24-25-256-257,0"
-	defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
-)
-
 var (
+	GmgnAIBaseURL  = "https://gmgn.ai"
 	fakeDeviceInfo = ""
 )
 
@@ -68,7 +63,7 @@ func init() {
 type Client struct {
 	chain      string
 	proxy      config.Sock5Proxy
-	httpClient cycletls.CycleTLS
+	httpClient *http.Client
 }
 
 func NewClient(chainId int64, proxy config.Sock5Proxy) (*Client, error) {
@@ -77,87 +72,74 @@ func NewClient(chainId int64, proxy config.Sock5Proxy) (*Client, error) {
 		return nil, errors.New("unsupported chain")
 	}
 
+	surfClient := surf.NewClient()
+	if proxy.Enable {
+		surfClient.Builder().Proxy(g.String(fmt.Sprintf("socks5://%s:%d", proxy.Host, proxy.Port)))
+	}
+	httpClient := surfClient.Builder().
+		Impersonate().
+		Chrome().
+		Build().
+		Unwrap().
+		Std()
+
 	return &Client{
 		chain:      chain,
 		proxy:      proxy,
-		httpClient: cycletls.Init(),
+		httpClient: httpClient,
 	}, nil
 }
 
-// getProxyURL 获取代理URL
-func (c *Client) getProxyURL() string {
-	if !c.proxy.Enable {
-		return ""
+func (c *Client) getHeaders(referer string) map[string]string {
+	headers := map[string]string{
+		"accept":          "application/json, text/plain, */*",
+		"accept-language": "zh-CN,zh;q=0.9",
+		"accept-encoding": "gzip, deflate, br",
 	}
-	return fmt.Sprintf("socks5://%s:%d", c.proxy.Host, c.proxy.Port)
-}
-
-// getCommonHeaders 获取通用请求头
-func (c *Client) getCommonHeaders() map[string]string {
-	return map[string]string{
-		"accept":                      "application/json, text/plain, */*",
-		"accept-language":             "zh-CN,zh;q=0.9",
-		"accept-encoding":             "gzip,deflate,br",
-		"priority":                    "u=1, i",
-		"sec-ch-ua":                   `"Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"`,
-		"sec-ch-ua-arch":              `"x86"`,
-		"sec-ch-ua-bitness":           `"64"`,
-		"sec-ch-ua-full-version":      `"136.0.7103.93"`,
-		"sec-ch-ua-full-version-list": `"Chromium";v="136.0.7103.93", "Google Chrome";v="136.0.7103.93", "Not.A/Brand";v="99.0.0.0"`,
-		"sec-ch-ua-mobile":            `?0`,
-		"sec-ch-ua-model":             `""`,
-		"sec-ch-ua-platform":          `"Windows"`,
-		"sec-ch-ua-platform-version":  `"Windows"`,
-		"sec-fetch-dest":              `empty`,
-		"sec-fetch-mode":              `cors`,
-		"sec-fetch-site":              `same-origin`,
-	}
-}
-
-// getRequestOptions 获取请求选项
-func (c *Client) getRequestOptions(referer string) cycletls.Options {
-	headers := c.getCommonHeaders()
 	if referer != "" {
 		headers["referer"] = referer
 	}
-
-	return cycletls.Options{
-		Proxy:     c.getProxyURL(),
-		Ja3:       defaultJA3,
-		UserAgent: defaultUserAgent,
-		Headers:   headers,
-	}
+	return headers
 }
 
-// doRequest 执行HTTP请求并处理响应
 func (c *Client) doRequest(ctx context.Context, url, method string, bodyJson any, referer string) (string, error) {
-	var body []byte
+	var body io.Reader
 	if bodyJson != nil {
-		var err error
-		body, err = json.Marshal(bodyJson)
+		data, err := json.Marshal(bodyJson)
 		if err != nil {
 			return "", err
 		}
+		body = bytes.NewBuffer(data)
 	}
 
-	options := c.getRequestOptions(referer)
-	if body != nil {
-		options.Body = string(body)
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
+	if err != nil {
+		return "", err
 	}
 
-	response, err := c.httpClient.Do(url, options, method)
+	headers := c.getHeaders(referer)
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("request failed: %w", err)
 	}
+	defer resp.Body.Close()
 
-	if response.Status < 200 || response.Status >= 300 {
-		return "", fmt.Errorf("http status: %d", response.Status)
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
 	}
 
-	return response.Body, nil
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return "", fmt.Errorf("http status: %d", resp.StatusCode)
+	}
+
+	return string(respBody), nil
 }
 
-// parseGmgnResponse 解析GMGN响应
 func (c *Client) parseGmgnResponse(responseBody string) (*gmgnResponse, error) {
 	var res gmgnResponse
 	if err := json.Unmarshal([]byte(responseBody), &res); err != nil {
@@ -171,7 +153,6 @@ func (c *Client) parseGmgnResponse(responseBody string) (*gmgnResponse, error) {
 	return &res, nil
 }
 
-// convertToOhlcData 转换GMGN OHLC数据为标准格式
 func (c *Client) convertToOhlcData(gmgnData []gmgnOhlc) []charts.Ohlc {
 	ohlcs := make([]charts.Ohlc, 0, len(gmgnData))
 	for _, item := range gmgnData {
@@ -195,8 +176,8 @@ func (c *Client) FetchTokenCandles(ctx context.Context, token string, to time.Ti
 	}
 
 	url := fmt.Sprintf("%s/api/v1/token_candles/%s/%s?%s&resolution=%s&from=0&to=%d&limit=%d",
-		gmgnAIBaseURL, c.chain, token, fakeDeviceInfo, period, to.UnixMilli(), limit)
-	referer := fmt.Sprintf("%s/%s/token/%s", gmgnAIBaseURL, c.chain, token)
+		GmgnAIBaseURL, c.chain, token, fakeDeviceInfo, period, to.UnixMilli(), limit)
+	referer := fmt.Sprintf("%s/%s/token/%s", GmgnAIBaseURL, c.chain, token)
 
 	response, err := c.doRequest(ctx, url, http.MethodGet, nil, referer)
 	if err != nil {
@@ -221,8 +202,8 @@ func (c *Client) FetchTokenCandles(ctx context.Context, token string, to time.Ti
 
 func (c *Client) FetchTokenHolders(ctx context.Context, token string) ([]*HolderInfo, error) {
 	url := fmt.Sprintf("%s/vas/api/v1/token_holders/%s/%s?%s&limit=100&cost=20orderby=amount_percentage&direction=desc",
-		gmgnAIBaseURL, c.chain, token, fakeDeviceInfo)
-	referer := fmt.Sprintf("%s/%s/token/%s", gmgnAIBaseURL, c.chain, token)
+		GmgnAIBaseURL, c.chain, token, fakeDeviceInfo)
+	referer := fmt.Sprintf("%s/%s/token/%s", GmgnAIBaseURL, c.chain, token)
 
 	response, err := c.doRequest(ctx, url, http.MethodGet, nil, referer)
 	if err != nil {
@@ -244,8 +225,8 @@ func (c *Client) FetchTokenHolders(ctx context.Context, token string) ([]*Holder
 
 func (c *Client) FetchWalletHoldings(ctx context.Context, wallet string) ([]*WalletHolding, error) {
 	url := fmt.Sprintf("%s/api/v1/wallet_holdings/%s/%s?%s&limit=50&orderby=last_active_timestamp&direction=desc&showsmall=false&sellout=false&hide_airdrop=true&hide_abnormal=false",
-		gmgnAIBaseURL, c.chain, wallet, fakeDeviceInfo)
-	referer := fmt.Sprintf("%s/%s/address/%s", c.chain, gmgnAIBaseURL, wallet)
+		GmgnAIBaseURL, c.chain, wallet, fakeDeviceInfo)
+	referer := fmt.Sprintf("%s/%s/address/%s", c.chain, GmgnAIBaseURL, wallet)
 
 	response, err := c.doRequest(ctx, url, http.MethodGet, nil, referer)
 	if err != nil {
@@ -292,7 +273,7 @@ func (c *Client) FetchTrendingToken1H(ctx context.Context, tokenFilter TokenFilt
 	}
 
 	referer := fmt.Sprintf("https://gmgn.ai/trend?chain=%s", c.chain)
-	url := fmt.Sprintf("%s/defi/quotation/v1/rank/%s/swaps/1h?%s&%s", gmgnAIBaseURL, c.chain, fakeDeviceInfo, strings.Join(params, "&"))
+	url := fmt.Sprintf("%s/defi/quotation/v1/rank/%s/swaps/1h?%s&%s", GmgnAIBaseURL, c.chain, fakeDeviceInfo, strings.Join(params, "&"))
 
 	response, err := c.doRequest(ctx, url, http.MethodGet, nil, referer)
 	if err != nil {
