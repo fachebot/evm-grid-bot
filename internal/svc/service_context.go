@@ -88,7 +88,7 @@ func NewServiceContext(c *config.Config, strategyEngine *engine.StrategyEngine, 
 	}
 
 	// 创建GMGN客户端
-	gmgnClient, err := gmgn.NewClient(c.Chain.Id, c.Sock5Proxy, c.ZenRows)
+	gmgnClient, err := gmgn.NewClient(c.Chain.Id, c.Sock5Proxy)
 	if err != nil {
 		logger.Fatalf("创建gmgn客户端失败, %s", err)
 	}

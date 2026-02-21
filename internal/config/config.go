@@ -34,13 +34,6 @@ type DeepSeek struct {
 	Apikey string `yaml:"Apikey"`
 }
 
-type ZenRows struct {
-	Apikey              string `yaml:"Apikey"`
-	FetchTokenCandles   bool   `yaml:"FetchTokenCandles"`
-	FetchTokenHolders   bool   `yaml:"FetchTokenHolders"`
-	FetchWalletHoldings bool   `yaml:"FetchWalletHoldings"`
-}
-
 type Sock5Proxy struct {
 	Host   string `yaml:"Host"`
 	Port   int32  `yaml:"Port"`
@@ -142,7 +135,6 @@ type Config struct {
 	Chain               Chain               `yaml:"Chain"`
 	Datapi              string              `yaml:"Datapi"`
 	OkxWeb3             OkxWeb3             `yaml:"OkxWeb3"`
-	ZenRows             ZenRows             `yaml:"ZenRows"`
 	DeepSeek            DeepSeek            `yaml:"DeepSeek"`
 	Sock5Proxy          Sock5Proxy          `yaml:"Sock5Proxy"`
 	LoreFilter          LoreFilter          `yaml:"LoreFilter"`

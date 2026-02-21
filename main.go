@@ -130,7 +130,7 @@ func main() {
 		subscriber.Start()
 		subscriber.WaitUntilConnected()
 
-		gmgnClient, err := gmgn.NewClient(c.Chain.Id, c.Sock5Proxy, c.ZenRows)
+		gmgnClient, err := gmgn.NewClient(c.Chain.Id, c.Sock5Proxy)
 		if err != nil {
 			logger.Fatalf("创建gmgn客户端失败, %s", err)
 		}

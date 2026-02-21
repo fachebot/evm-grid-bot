@@ -3,7 +3,6 @@ package gmgn
 import (
 	"context"
 	"crypto/rand"
-	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -18,7 +17,6 @@ import (
 
 	"github.com/Danny-Dasilva/CycleTLS/cycletls"
 	"github.com/google/uuid"
-	"golang.org/x/net/proxy"
 )
 
 const (
@@ -71,10 +69,9 @@ type Client struct {
 	chain      string
 	proxy      config.Sock5Proxy
 	httpClient cycletls.CycleTLS
-	zenRows    config.ZenRows
 }
 
-func NewClient(chainId int64, proxy config.Sock5Proxy, zenRows config.ZenRows) (*Client, error) {
+func NewClient(chainId int64, proxy config.Sock5Proxy) (*Client, error) {
 	chain, ok := ChainIdToChainName(chainId)
 	if !ok {
 		return nil, errors.New("unsupported chain")
@@ -84,7 +81,6 @@ func NewClient(chainId int64, proxy config.Sock5Proxy, zenRows config.ZenRows) (
 		chain:      chain,
 		proxy:      proxy,
 		httpClient: cycletls.Init(),
-		zenRows:    zenRows,
 	}, nil
 }
 
@@ -134,48 +130,31 @@ func (c *Client) getRequestOptions(referer string) cycletls.Options {
 }
 
 // doRequest 执行HTTP请求并处理响应
-func (c *Client) doRequest(ctx context.Context, scraperApiKey, url, method string, bodyJson any, referer string) (string, error) {
-	if scraperApiKey == "" {
-		var body []byte
-		if bodyJson != nil {
-			var err error
-			body, err = json.Marshal(bodyJson)
-			if err != nil {
-				return "", err
-			}
-		}
-
-		options := c.getRequestOptions(referer)
-		if body != nil {
-			options.Body = string(body)
-		}
-
-		response, err := c.httpClient.Do(url, options, method)
-		if err != nil {
-			return "", fmt.Errorf("request failed: %w", err)
-		}
-
-		if response.Status < 200 || response.Status >= 300 {
-			return "", fmt.Errorf("http status: %d", response.Status)
-		}
-
-		return response.Body, nil
-	}
-
-	httpClient := new(http.Client)
-	if c.proxy.Enable {
-		socks5Proxy := fmt.Sprintf("%s:%d", c.proxy.Host, c.proxy.Port)
-		dialer, err := proxy.SOCKS5("tcp", socks5Proxy, nil, proxy.Direct)
+func (c *Client) doRequest(ctx context.Context, url, method string, bodyJson any, referer string) (string, error) {
+	var body []byte
+	if bodyJson != nil {
+		var err error
+		body, err = json.Marshal(bodyJson)
 		if err != nil {
 			return "", err
 		}
-
-		httpClient.Transport = &http.Transport{
-			Dial:            dialer.Dial,
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
 	}
-	return scraperDoRequest(ctx, httpClient, scraperApiKey, method, url, bodyJson)
+
+	options := c.getRequestOptions(referer)
+	if body != nil {
+		options.Body = string(body)
+	}
+
+	response, err := c.httpClient.Do(url, options, method)
+	if err != nil {
+		return "", fmt.Errorf("request failed: %w", err)
+	}
+
+	if response.Status < 200 || response.Status >= 300 {
+		return "", fmt.Errorf("http status: %d", response.Status)
+	}
+
+	return response.Body, nil
 }
 
 // parseGmgnResponse 解析GMGN响应
@@ -219,11 +198,7 @@ func (c *Client) FetchTokenCandles(ctx context.Context, token string, to time.Ti
 		gmgnAIBaseURL, c.chain, token, fakeDeviceInfo, period, to.UnixMilli(), limit)
 	referer := fmt.Sprintf("%s/%s/token/%s", gmgnAIBaseURL, c.chain, token)
 
-	scraperApiKey := ""
-	if c.zenRows.FetchTokenCandles {
-		scraperApiKey = c.zenRows.Apikey
-	}
-	response, err := c.doRequest(ctx, scraperApiKey, url, http.MethodGet, nil, referer)
+	response, err := c.doRequest(ctx, url, http.MethodGet, nil, referer)
 	if err != nil {
 		return nil, err
 	}
@@ -249,11 +224,7 @@ func (c *Client) FetchTokenHolders(ctx context.Context, token string) ([]*Holder
 		gmgnAIBaseURL, c.chain, token, fakeDeviceInfo)
 	referer := fmt.Sprintf("%s/%s/token/%s", gmgnAIBaseURL, c.chain, token)
 
-	scraperApiKey := ""
-	if c.zenRows.FetchTokenHolders {
-		scraperApiKey = c.zenRows.Apikey
-	}
-	response, err := c.doRequest(ctx, scraperApiKey, url, http.MethodGet, nil, referer)
+	response, err := c.doRequest(ctx, url, http.MethodGet, nil, referer)
 	if err != nil {
 		return nil, err
 	}
@@ -276,11 +247,7 @@ func (c *Client) FetchWalletHoldings(ctx context.Context, wallet string) ([]*Wal
 		gmgnAIBaseURL, c.chain, wallet, fakeDeviceInfo)
 	referer := fmt.Sprintf("%s/%s/address/%s", c.chain, gmgnAIBaseURL, wallet)
 
-	scraperApiKey := ""
-	if c.zenRows.FetchWalletHoldings {
-		scraperApiKey = c.zenRows.Apikey
-	}
-	response, err := c.doRequest(ctx, scraperApiKey, url, http.MethodGet, nil, referer)
+	response, err := c.doRequest(ctx, url, http.MethodGet, nil, referer)
 	if err != nil {
 		return nil, err
 	}
@@ -327,11 +294,7 @@ func (c *Client) FetchTrendingToken1H(ctx context.Context, tokenFilter TokenFilt
 	referer := fmt.Sprintf("https://gmgn.ai/trend?chain=%s", c.chain)
 	url := fmt.Sprintf("%s/defi/quotation/v1/rank/%s/swaps/1h?%s&%s", gmgnAIBaseURL, c.chain, fakeDeviceInfo, strings.Join(params, "&"))
 
-	scraperApiKey := ""
-	if c.zenRows.FetchWalletHoldings {
-		scraperApiKey = c.zenRows.Apikey
-	}
-	response, err := c.doRequest(ctx, scraperApiKey, url, http.MethodGet, nil, referer)
+	response, err := c.doRequest(ctx, url, http.MethodGet, nil, referer)
 	if err != nil {
 		return nil, err
 	}
