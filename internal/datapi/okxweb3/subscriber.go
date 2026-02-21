@@ -21,45 +21,53 @@ import (
 	"golang.org/x/net/proxy"
 )
 
+// 重连配置
 const (
-	reconnectInitial = 1 * time.Second
-	reconnectMax     = 30 * time.Second
+	reconnectInitial = 1 * time.Second  // 初始重连间隔
+	reconnectMax     = 30 * time.Second // 最大重连间隔
 )
 
+// Ticker K线行情数据
 type Ticker struct {
-	Token string
-	First bool
-	Ohlc  charts.Ohlc
+	Token string      // 代币地址
+	First bool        // 是否为首条数据
+	Ohlc  charts.Ohlc // K线数据
 }
 
+// OkxSubscriber OKX Web3行情订阅者
+// 通过WebSocket实时订阅代币K线数据
 type OkxSubscriber struct {
-	ctx      context.Context
-	cancel   context.CancelFunc
-	stopChan chan struct{}
-	url      string
+	ctx      context.Context    // 上下文
+	cancel   context.CancelFunc // 取消函数
+	stopChan chan struct{}      // 停止信号通道
+	url      string             // WebSocket URL
 
-	chainIndex string
-	resolution string
-	conn       *websocket.Conn
-	proxy      config.Sock5Proxy
-	reconnect  chan struct{}
-	mutex      sync.Mutex
-	assets     map[string]struct{}
+	chainIndex string              // 链索引
+	resolution string              // K线周期
+	conn       *websocket.Conn     // WebSocket连接
+	proxy      config.Sock5Proxy   // SOCKS5代理配置
+	reconnect  chan struct{}       // 重连信号通道
+	mutex      sync.Mutex          // 互斥锁
+	assets     map[string]struct{} // 订阅的代币列表
 
-	tickerChan     chan Ticker
-	messageCounter map[string]int
+	tickerChan     chan Ticker    // K线数据通道
+	messageCounter map[string]int // 消息计数器
 }
 
+// netDialTLSContext 自定义TLS拨号函数
+// 支持SOCKS5代理和自定义TLS指纹
 func netDialTLSContext(ctx context.Context, network, addr string, sock5Proxy string) (net.Conn, error) {
 	serverName := addr
 	if host, _, err := net.SplitHostPort(addr); err == nil {
 		serverName = host
 	}
 
+	// 使用随机TLS指纹
 	spec, err := utls.UTLSIdToSpec(RandomClientHelloID())
 	if err != nil {
 		return nil, err
 	}
+	// 强制使用HTTP/1.1 ALPN
 	for _, ext := range spec.Extensions {
 		alpnExt, ok := ext.(*utls.ALPNExtension)
 		if !ok {
@@ -70,6 +78,7 @@ func netDialTLSContext(ctx context.Context, network, addr string, sock5Proxy str
 	}
 
 	var conn net.Conn
+	// 是否使用SOCKS5代理
 	if sock5Proxy == "" {
 		conn, err = new(net.Dialer).DialContext(ctx, network, addr)
 		if err != nil {
@@ -87,8 +96,9 @@ func netDialTLSContext(ctx context.Context, network, addr string, sock5Proxy str
 		}
 	}
 
+	// 自定义TLS配置
 	config := &utls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: true, // 跳过证书验证
 		ServerName:         serverName,
 	}
 
@@ -100,6 +110,10 @@ func netDialTLSContext(ctx context.Context, network, addr string, sock5Proxy str
 	return client, nil
 }
 
+// NewOkxSubscriber 创建OKX行情订阅者
+// chainId: 链ID
+// resolution: K线周期 (如 "1h", "15m")
+// proxy: SOCKS5代理配置
 func NewOkxSubscriber(chainId int64, resolution string, proxy config.Sock5Proxy) (*OkxSubscriber, error) {
 	chainIndex, ok := ChainIdToChainIndex(chainId)
 	if !ok {
@@ -110,7 +124,7 @@ func NewOkxSubscriber(chainId int64, resolution string, proxy config.Sock5Proxy)
 	subscriber := &OkxSubscriber{
 		ctx:            ctx,
 		cancel:         cancel,
-		url:            "wss://wsdexpri.okx.com/ws/v5/ipublic",
+		url:            "wss://wsdexpri.okx.com/ws/v5/ipublic", // OKX WebSocket地址
 		chainIndex:     chainIndex,
 		resolution:     resolution,
 		proxy:          proxy,
@@ -121,6 +135,7 @@ func NewOkxSubscriber(chainId int64, resolution string, proxy config.Sock5Proxy)
 	return subscriber, nil
 }
 
+// Stop 停止订阅服务
 func (subscriber *OkxSubscriber) Stop() {
 	logger.Infof("[OkxSubscriber] 准备停止服务")
 
@@ -143,6 +158,7 @@ func (subscriber *OkxSubscriber) Stop() {
 	logger.Infof("[OkxSubscriber] 服务已经停止")
 }
 
+// Start 启动订阅服务
 func (subscriber *OkxSubscriber) Start() {
 	if subscriber.stopChan != nil {
 		return
@@ -156,12 +172,14 @@ func (subscriber *OkxSubscriber) Start() {
 	}
 }
 
+// WaitUntilConnected 等待连接建立
 func (subscriber *OkxSubscriber) WaitUntilConnected() {
 	for subscriber.conn == nil {
 		time.Sleep(time.Second * 1)
 	}
 }
 
+// GetTickerChan 获取K线数据通道
 func (subscriber *OkxSubscriber) GetTickerChan() <-chan Ticker {
 	if subscriber.tickerChan == nil {
 		subscriber.tickerChan = make(chan Ticker, 1024)
@@ -169,11 +187,15 @@ func (subscriber *OkxSubscriber) GetTickerChan() <-chan Ticker {
 	return subscriber.tickerChan
 }
 
+// Subscribe 订阅代币K线
+// assets: 代币地址列表
 func (subscriber *OkxSubscriber) Subscribe(assets []string) error {
+	// 转换为小写
 	for idx, asset := range assets {
 		assets[idx] = strings.ToLower(asset)
 	}
 
+	// 获取所有已订阅的代币
 	allAssets := make([]string, 0)
 	subscriber.mutex.Lock()
 	for _, asset := range assets {
@@ -193,6 +215,7 @@ func (subscriber *OkxSubscriber) Subscribe(assets []string) error {
 
 	logger.Debugf("[OkxSubscriber] 订阅Candle, assets: %+v", assets)
 
+	// 构建订阅参数
 	args := make([]map[string]string, 0, len(assets))
 	channel := fmt.Sprintf("dex-token-candle%s", subscriber.resolution)
 	for _, asset := range allAssets {
@@ -211,6 +234,8 @@ func (subscriber *OkxSubscriber) Subscribe(assets []string) error {
 	return err
 }
 
+// Unsubscribe 取消订阅代币K线
+// assets: 代币地址列表
 func (subscriber *OkxSubscriber) Unsubscribe(assets []string) error {
 	if len(assets) == 0 {
 		return nil
@@ -219,12 +244,14 @@ func (subscriber *OkxSubscriber) Unsubscribe(assets []string) error {
 		return fmt.Errorf("[OkxSubscriber] 连接未建立")
 	}
 
+	// 转换为小写
 	for idx, asset := range assets {
 		assets[idx] = strings.ToLower(asset)
 	}
 
 	logger.Debugf("[OkxSubscriber] 取消订阅Candle, assets: %+v", assets)
 
+	// 构建取消订阅参数
 	args := make([]map[string]string, 0, len(assets))
 	channel := fmt.Sprintf("dex-token-candle%s", subscriber.resolution)
 	for _, asset := range assets {
@@ -251,6 +278,7 @@ func (subscriber *OkxSubscriber) Unsubscribe(assets []string) error {
 	return err
 }
 
+// run 订阅者主循环
 func (subscriber *OkxSubscriber) run() {
 	subscriber.connect()
 
@@ -268,6 +296,7 @@ loop:
 				logger.Infof("[OkxSubscriber] 重新建立连接...")
 				subscriber.connect()
 
+				// 指数退避重连
 				reconnectDelay *= 2
 				if reconnectDelay > reconnectMax {
 					reconnectDelay = reconnectMax
@@ -279,7 +308,9 @@ loop:
 	subscriber.stopChan <- struct{}{}
 }
 
+// connect 建立WebSocket连接
 func (subscriber *OkxSubscriber) connect() {
+	// 配置代理
 	proxy := ""
 	if subscriber.proxy.Enable {
 		proxy = fmt.Sprintf("%s:%d", subscriber.proxy.Host, subscriber.proxy.Port)
@@ -306,6 +337,7 @@ func (subscriber *OkxSubscriber) connect() {
 	headers.Set("pragma", "no-cache")
 	headers.Set("accept-encoding", "gzip, deflate, br, zstd")
 
+	// 建立WebSocket连接
 	conn, _, err := dialer.Dial(subscriber.url, headers)
 	if err != nil {
 		logger.Errorf("[OkxSubscriber] 连接失败, %v", err)
@@ -317,6 +349,7 @@ func (subscriber *OkxSubscriber) connect() {
 	subscriber.messageCounter = make(map[string]int)
 	logger.Infof("[OkxSubscriber] 连接已建立")
 
+	// 重新订阅之前的代币
 	assets := make([]string, 0)
 	subscriber.mutex.Lock()
 	for asset := range subscriber.assets {
@@ -325,9 +358,11 @@ func (subscriber *OkxSubscriber) connect() {
 	subscriber.mutex.Unlock()
 	subscriber.Subscribe(assets)
 
+	// 启动消息读取协程
 	go subscriber.readMessages()
 }
 
+// heartbeat 心跳保活
 func (subscriber *OkxSubscriber) heartbeat(ctx context.Context) {
 	timer := time.NewTimer(0)
 	defer timer.Stop()
@@ -335,11 +370,13 @@ func (subscriber *OkxSubscriber) heartbeat(ctx context.Context) {
 	for {
 		select {
 		case <-timer.C:
+			// 发送Ping消息
 			if err := subscriber.conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				logger.Errorf("[OkxSubscriber] 发送心跳消息失败, %v", err)
 				return
 			}
 
+			// 每20秒发送一次心跳
 			duration := time.Second * 20
 			timer.Reset(duration)
 		case <-ctx.Done():
@@ -348,9 +385,11 @@ func (subscriber *OkxSubscriber) heartbeat(ctx context.Context) {
 	}
 }
 
+// readMessages 读取WebSocket消息
 func (subscriber *OkxSubscriber) readMessages() {
 	defer subscriber.conn.Close()
 
+	// 启动心跳协程
 	ctx, cancel := context.WithCancel(subscriber.ctx)
 	defer cancel()
 	go subscriber.heartbeat(ctx)
@@ -374,6 +413,7 @@ func (subscriber *OkxSubscriber) readMessages() {
 			continue
 		}
 
+		// 忽略事件消息
 		if payload.Event != "" {
 			continue
 		}
@@ -383,14 +423,15 @@ func (subscriber *OkxSubscriber) readMessages() {
 		case channel:
 			var tokenCandles [][]decimal.Decimal
 			if err = json.Unmarshal(payload.Data, &tokenCandles); err != nil {
-				logger.Errorf("[JupagSubscriber] 解析Candles失败, message: %s, %v", message, err)
+				logger.Errorf("[OkxSubscriber] 解析Candles失败, message: %s, %v", message, err)
 				continue
 			}
 
+			// 转换为K线数据
 			ohlcs := make([]charts.Ohlc, 0, len(tokenCandles))
 			for _, data := range tokenCandles {
 				if len(data) < 8 {
-					logger.Errorf("[JupagSubscriber] Candle数据长度错误, candle: %+v", data)
+					logger.Errorf("[OkxSubscriber] Candle数据长度错误, candle: %+v", data)
 					continue
 				}
 
@@ -407,6 +448,7 @@ func (subscriber *OkxSubscriber) readMessages() {
 			if subscriber.tickerChan != nil {
 				tokenAddress := payload.GetTokenAddress()
 				for _, ohlc := range ohlcs {
+					// 检查是否为该代币的首条数据
 					count, ok := subscriber.messageCounter[tokenAddress]
 					if !ok {
 						count = 0
@@ -420,6 +462,7 @@ func (subscriber *OkxSubscriber) readMessages() {
 
 					subscriber.messageCounter[tokenAddress] = count + 1
 
+					// 发送到K线数据通道
 					select {
 					case subscriber.tickerChan <- ticker:
 						logger.Debugf("[OkxSubscriber] 分发 Ticker 数据, %+v", ticker)
@@ -432,6 +475,7 @@ func (subscriber *OkxSubscriber) readMessages() {
 	}
 }
 
+// scheduleReconnect 安排重连
 func (subscriber *OkxSubscriber) scheduleReconnect() {
 	if subscriber.ctx.Err() == nil {
 		select {

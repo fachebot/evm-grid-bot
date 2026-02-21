@@ -6,218 +6,231 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// TokenTransfer 代币转账记录
 type TokenTransfer struct {
-	Name      *string `json:"name"`
-	Address   string  `json:"address"`
-	Timestamp int64   `json:"timestamp"`
-	TxHash    string  `json:"tx_hash"`
-	Type      string  `json:"type"`
+	Name      *string `json:"name"`      // 代币名称
+	Address   string  `json:"address"`   // 代币地址
+	Timestamp int64   `json:"timestamp"` // 时间戳
+	TxHash    string  `json:"tx_hash"`   // 交易哈希
+	Type      string  `json:"type"`      // 转账类型
 }
 
+// NativeTransfer 原生代币转账记录
 type NativeTransfer struct {
-	Name        *string `json:"name"`
-	FromAddress string  `json:"from_address"`
-	Timestamp   int64   `json:"timestamp"`
+	Name        *string `json:"name"`         // 代币名称
+	FromAddress string  `json:"from_address"` // 转出地址
+	Timestamp   int64   `json:"timestamp"`    // 时间戳
 }
 
+// HolderInfo 代币持有者信息
 type HolderInfo struct {
-	Address              string           `json:"address"`
-	AccountAddress       string           `json:"account_address"`
-	AddrType             int              `json:"addr_type"`
-	AmountCur            decimal.Decimal  `json:"amount_cur"`
-	UsdValue             decimal.Decimal  `json:"usd_value"`
-	CostCur              decimal.Decimal  `json:"cost_cur"`
-	SellAmountCur        decimal.Decimal  `json:"sell_amount_cur"`
-	SellAmountPercentage decimal.Decimal  `json:"sell_amount_percentage"`
-	SellVolumeCur        decimal.Decimal  `json:"sell_volume_cur"`
-	BuyVolumeCur         decimal.Decimal  `json:"buy_volume_cur"`
-	BuyAmountCur         decimal.Decimal  `json:"buy_amount_cur"`
-	NetflowUsd           decimal.Decimal  `json:"netflow_usd"`
-	NetflowAmount        decimal.Decimal  `json:"netflow_amount"`
-	BuyTxCountCur        int              `json:"buy_tx_count_cur"`
-	SellTxCountCur       int              `json:"sell_tx_count_cur"`
-	WalletTagV2          string           `json:"wallet_tag_v2"`
-	NativeBalance        string           `json:"native_balance"`
-	Balance              decimal.Decimal  `json:"balance"`
-	Profit               decimal.Decimal  `json:"profit"`
-	RealizedProfit       decimal.Decimal  `json:"realized_profit"`
-	ProfitChange         *decimal.Decimal `json:"profit_change"`
-	AmountPercentage     decimal.Decimal  `json:"amount_percentage"`
-	UnrealizedProfit     decimal.Decimal  `json:"unrealized_profit"`
-	UnrealizedPnl        *decimal.Decimal `json:"unrealized_pnl"`
-	AvgCost              *decimal.Decimal `json:"avg_cost"`
-	AvgSold              *decimal.Decimal `json:"avg_sold"`
-	AccuAmount           decimal.Decimal  `json:"accu_amount"`
-	AccuCost             decimal.Decimal  `json:"accu_cost"`
-	Cost                 decimal.Decimal  `json:"cost"`
-	TotalCost            decimal.Decimal  `json:"total_cost"`
-	TransferIn           bool             `json:"transfer_in"`
-	IsNew                bool             `json:"is_new"`
-	IsSuspicious         bool             `json:"is_suspicious"`
-	IsOnCurve            bool             `json:"is_on_curve"`
-	StartHoldingAt       int64            `json:"start_holding_at"`
-	EndHoldingAt         *int64           `json:"end_holding_at"`
-	LastActiveTimestamp  int64            `json:"last_active_timestamp"`
-	NativeTransfer       NativeTransfer   `json:"native_transfer"`
-	TokenTransfer        TokenTransfer    `json:"token_transfer"`
-	TokenTransferIn      TokenTransfer    `json:"token_transfer_in"`
-	TokenTransferOut     TokenTransfer    `json:"token_transfer_out"`
-	Tags                 []string         `json:"tags"`
-	MakerTokenTags       []string         `json:"maker_token_tags"`
-	Name                 string           `json:"name"`
-	Avatar               string           `json:"avatar"`
-	TwitterUsername      *string          `json:"twitter_username"`
-	TwitterName          *string          `json:"twitter_name"`
-	CreatedAt            int64            `json:"created_at"`
+	Address              string           `json:"address"`                // 持有者地址
+	AccountAddress       string           `json:"account_address"`        // 账户地址
+	AddrType             int              `json:"addr_type"`              // 地址类型
+	AmountCur            decimal.Decimal  `json:"amount_cur"`             // 当前数量
+	UsdValue             decimal.Decimal  `json:"usd_value"`              // USD价值
+	CostCur              decimal.Decimal  `json:"cost_cur"`               // 成本
+	SellAmountCur        decimal.Decimal  `json:"sell_amount_cur"`        // 卖出数量
+	SellAmountPercentage decimal.Decimal  `json:"sell_amount_percentage"` // 卖出占比
+	SellVolumeCur        decimal.Decimal  `json:"sell_volume_cur"`        // 卖出金额
+	BuyVolumeCur         decimal.Decimal  `json:"buy_volume_cur"`         // 买入金额
+	BuyAmountCur         decimal.Decimal  `json:"buy_amount_cur"`         // 买入数量
+	NetflowUsd           decimal.Decimal  `json:"netflow_usd"`            // USD净流入
+	NetflowAmount        decimal.Decimal  `json:"netflow_amount"`         // 数量净流入
+	BuyTxCountCur        int              `json:"buy_tx_count_cur"`       // 买入交易数
+	SellTxCountCur       int              `json:"sell_tx_count_cur"`      // 卖出交易数
+	WalletTagV2          string           `json:"wallet_tag_v2"`          // 钱包标签
+	NativeBalance        string           `json:"native_balance"`         // 原生代币余额
+	Balance              decimal.Decimal  `json:"balance"`                // 余额
+	Profit               decimal.Decimal  `json:"profit"`                 // 盈亏
+	RealizedProfit       decimal.Decimal  `json:"realized_profit"`        // 已实现盈亏
+	ProfitChange         *decimal.Decimal `json:"profit_change"`          // 盈亏变化
+	AmountPercentage     decimal.Decimal  `json:"amount_percentage"`      // 数量占比
+	UnrealizedProfit     decimal.Decimal  `json:"unrealized_profit"`      // 未实现盈亏
+	UnrealizedPnl        *decimal.Decimal `json:"unrealized_pnl"`         // 未实现盈亏率
+	AvgCost              *decimal.Decimal `json:"avg_cost"`               // 平均成本
+	AvgSold              *decimal.Decimal `json:"avg_sold"`               // 平均卖出价
+	AccuAmount           decimal.Decimal  `json:"accu_amount"`            // 累计数量
+	AccuCost             decimal.Decimal  `json:"accu_cost"`              // 累计成本
+	Cost                 decimal.Decimal  `json:"cost"`                   // 成本
+	TotalCost            decimal.Decimal  `json:"total_cost"`             // 总成本
+	TransferIn           bool             `json:"transfer_in"`            // 是否转入
+	IsNew                bool             `json:"is_new"`                 // 是否新增
+	IsSuspicious         bool             `json:"is_suspicious"`          // 是否可疑
+	IsOnCurve            bool             `json:"is_on_curve"`            // 是否在Curve上
+	StartHoldingAt       int64            `json:"start_holding_at"`       // 开始持有时间
+	EndHoldingAt         *int64           `json:"end_holding_at"`         // 结束持有时间
+	LastActiveTimestamp  int64            `json:"last_active_timestamp"`  // 最后活跃时间
+	NativeTransfer       NativeTransfer   `json:"native_transfer"`        // 原生代币转账
+	TokenTransfer        TokenTransfer    `json:"token_transfer"`         // 代币转账
+	TokenTransferIn      TokenTransfer    `json:"token_transfer_in"`      // 转入代币
+	TokenTransferOut     TokenTransfer    `json:"token_transfer_out"`     // 转出代币
+	Tags                 []string         `json:"tags"`                   // 标签列表
+	MakerTokenTags       []string         `json:"maker_token_tags"`       // 创世代币标签
+	Name                 string           `json:"name"`                   // 名称
+	Avatar               string           `json:"avatar"`                 // 头像
+	TwitterUsername      *string          `json:"twitter_username"`       // Twitter用户名
+	TwitterName          *string          `json:"twitter_name"`           // Twitter名称
+	CreatedAt            int64            `json:"created_at"`             // 创建时间
 }
 
+// HolderInfoList 代币持有者列表
 type HolderInfoList struct {
-	List []*HolderInfo `json:"list"`
+	List []*HolderInfo `json:"list"` // 持有者列表
 }
 
+// TokenHolding 代币持仓信息
 type TokenHolding struct {
-	Address           string          `json:"address"`
-	TokenAddress      string          `json:"token_address"`
-	Symbol            string          `json:"symbol"`
-	Name              string          `json:"name"`
-	Decimals          int             `json:"decimals"`
-	Logo              string          `json:"logo"`
-	PriceChange6h     decimal.Decimal `json:"price_change_6h"`
-	IsShowAlert       bool            `json:"is_show_alert"`
-	IsHoneypot        *bool           `json:"is_honeypot"`
-	CreationTimestamp int64           `json:"creation_timestamp"`
-	OpenTimestamp     int64           `json:"open_timestamp"`
+	Address           string          `json:"address"`            // 代币地址
+	TokenAddress      string          `json:"token_address"`      // 代币合约地址
+	Symbol            string          `json:"symbol"`             // 代币符号
+	Name              string          `json:"name"`               // 代币名称
+	Decimals          int             `json:"decimals"`           // 代币精度
+	Logo              string          `json:"logo"`               // 代币Logo
+	PriceChange6h     decimal.Decimal `json:"price_change_6h"`    // 6小时价格变化
+	IsShowAlert       bool            `json:"is_show_alert"`      // 是否显示提醒
+	IsHoneypot        *bool           `json:"is_honeypot"`        // 是否蜜罐代币
+	CreationTimestamp int64           `json:"creation_timestamp"` // 创建时间戳
+	OpenTimestamp     int64           `json:"open_timestamp"`     // 开放时间戳
 }
 
+// WalletHolding 钱包持仓信息
 type WalletHolding struct {
-	Token               TokenHolding    `json:"token"`
-	Balance             decimal.Decimal `json:"balance"`
-	UsdValue            decimal.Decimal `json:"usd_value"`
-	RealizedProfit30d   decimal.Decimal `json:"realized_profit_30d"`
-	RealizedProfit      decimal.Decimal `json:"realized_profit"`
-	RealizedPnl         decimal.Decimal `json:"realized_pnl"`
-	RealizedPnl30d      decimal.Decimal `json:"realized_pnl_30d"`
-	UnrealizedProfit    decimal.Decimal `json:"unrealized_profit"`
-	UnrealizedPnl       decimal.Decimal `json:"unrealized_pnl"`
-	TotalProfit         decimal.Decimal `json:"total_profit"`
-	TotalProfitPnl      decimal.Decimal `json:"total_profit_pnl"`
-	AvgCost             decimal.Decimal `json:"avg_cost"`
-	AvgSold             decimal.Decimal `json:"avg_sold"`
-	Buy30d              int             `json:"buy_30d"`
-	Sell30d             int             `json:"sell_30d"`
-	Sells               int             `json:"sells"`
-	Price               decimal.Decimal `json:"price"`
-	Cost                decimal.Decimal `json:"cost"`
-	PositionPercent     decimal.Decimal `json:"position_percent"`
-	LastActiveTimestamp int64           `json:"last_active_timestamp"`
-	HistorySoldIncome   decimal.Decimal `json:"history_sold_income"`
-	HistoryBoughtCost   decimal.Decimal `json:"history_bought_cost"`
-	HistoryBoughtAmount decimal.Decimal `json:"history_bought_amount"`
-	HistorySoldAmount   decimal.Decimal `json:"history_sold_amount"`
-	StartHoldingAt      int64           `json:"start_holding_at"`
-	EndHoldingAt        *int64          `json:"end_holding_at"`
-	Liquidity           decimal.Decimal `json:"liquidity"`
-	TotalSupply         decimal.Decimal `json:"total_supply"`
-	WalletTokenTags     []string        `json:"wallet_token_tags"`
-	LastBlock           int64           `json:"last_block"`
+	Token               TokenHolding    `json:"token"`                 // 代币信息
+	Balance             decimal.Decimal `json:"balance"`               // 持仓数量
+	UsdValue            decimal.Decimal `json:"usd_value"`             // USD价值
+	RealizedProfit30d   decimal.Decimal `json:"realized_profit_30d"`   // 30天已实现盈亏
+	RealizedProfit      decimal.Decimal `json:"realized_profit"`       // 已实现盈亏
+	RealizedPnl         decimal.Decimal `json:"realized_pnl"`          // 已实现盈亏率
+	RealizedPnl30d      decimal.Decimal `json:"realized_pnl_30d"`      // 30天已实现盈亏率
+	UnrealizedProfit    decimal.Decimal `json:"unrealized_profit"`     // 未实现盈亏
+	UnrealizedPnl       decimal.Decimal `json:"unrealized_pnl"`        // 未实现盈亏率
+	TotalProfit         decimal.Decimal `json:"total_profit"`          // 总盈亏
+	TotalProfitPnl      decimal.Decimal `json:"total_profit_pnl"`      // 总盈亏率
+	AvgCost             decimal.Decimal `json:"avg_cost"`              // 平均成本
+	AvgSold             decimal.Decimal `json:"avg_sold"`              // 平均卖出价
+	Buy30d              int             `json:"buy_30d"`               // 30天买入数
+	Sell30d             int             `json:"sell_30d"`              // 30天卖出数
+	Sells               int             `json:"sells"`                 // 卖出次数
+	Price               decimal.Decimal `json:"price"`                 // 价格
+	Cost                decimal.Decimal `json:"cost"`                  // 成本
+	PositionPercent     decimal.Decimal `json:"position_percent"`      // 仓位占比
+	LastActiveTimestamp int64           `json:"last_active_timestamp"` // 最后活跃时间
+	HistorySoldIncome   decimal.Decimal `json:"history_sold_income"`   // 历史卖出收入
+	HistoryBoughtCost   decimal.Decimal `json:"history_bought_cost"`   // 历史买入成本
+	HistoryBoughtAmount decimal.Decimal `json:"history_bought_amount"` // 历史买入数量
+	HistorySoldAmount   decimal.Decimal `json:"history_sold_amount"`   // 历史卖出数量
+	StartHoldingAt      int64           `json:"start_holding_at"`      // 开始持有时间
+	EndHoldingAt        *int64          `json:"end_holding_at"`        // 结束持有时间
+	Liquidity           decimal.Decimal `json:"liquidity"`             // 流动性
+	TotalSupply         decimal.Decimal `json:"total_supply"`          // 总供应量
+	WalletTokenTags     []string        `json:"wallet_token_tags"`     // 钱包代币标签
+	LastBlock           int64           `json:"last_block"`            // 最后区块
 }
 
+// WalletHoldings 钱包持仓列表
 type WalletHoldings struct {
-	Holdings []*WalletHolding `json:"holdings"`
+	Holdings []*WalletHolding `json:"holdings"` // 持仓列表
 }
 
+// TokenFilter 代币过滤条件
 type TokenFilter struct {
-	MinMarketcap      decimal.Decimal
-	MaxMarketcap      decimal.Decimal
-	MinHolderCount    int
-	MinSwaps1H        int
-	MinVolume1H       decimal.Decimal
-	MinCreatedMinutes int
-	MaxCreatedMinutes int
+	MinMarketcap      decimal.Decimal // 最小市值
+	MaxMarketcap      decimal.Decimal // 最大市值
+	MinHolderCount    int             // 最小持币人数
+	MinSwaps1H        int             // 最小1小时交易次数
+	MinVolume1H       decimal.Decimal // 最小1小时交易量
+	MinCreatedMinutes int             // 最小创建时间(分钟)
+	MaxCreatedMinutes int             // 最大创建时间(分钟)
 }
 
+// TokenRank 代币排名信息
 type TokenRank struct {
-	ID                       int              `json:"id"`
-	Chain                    string           `json:"chain"`
-	Address                  string           `json:"address"`
-	Symbol                   string           `json:"symbol"`
-	Logo                     string           `json:"logo"`
-	Price                    decimal.Decimal  `json:"price"`
-	PriceChangePercent       decimal.Decimal  `json:"price_change_percent"`
-	Swaps                    int              `json:"swaps"`
-	Volume                   decimal.Decimal  `json:"volume"`
-	Liquidity                decimal.Decimal  `json:"liquidity"`
-	MarketCap                decimal.Decimal  `json:"market_cap"`
-	HotLevel                 int              `json:"hot_level"`
-	PoolCreationTimestamp    int64            `json:"pool_creation_timestamp"` // 使用 int64 处理时间戳
-	HolderCount              int              `json:"holder_count"`
-	PoolType                 int              `json:"pool_type"`
-	PoolTypeStr              string           `json:"pool_type_str"`
-	TwitterUsername          string           `json:"twitter_username"`
-	Website                  *string          `json:"website"`  // 使用指针以处理可能为 null 的值
-	Telegram                 *string          `json:"telegram"` // 使用指针以处理可能为 null 的值
-	TotalSupply              int64            `json:"total_supply"`
-	OpenTimestamp            int64            `json:"open_timestamp"` // 使用 int64 处理时间戳
-	PriceChangePercent1m     decimal.Decimal  `json:"price_change_percent1m"`
-	PriceChangePercent5m     decimal.Decimal  `json:"price_change_percent5m"`
-	PriceChangePercent1h     decimal.Decimal  `json:"price_change_percent1h"`
-	Buys                     int              `json:"buys"`
-	Sells                    int              `json:"sells"`
-	InitialLiquidity         decimal.Decimal  `json:"initial_liquidity"`
-	IsShowAlert              bool             `json:"is_show_alert"`
-	Top10HolderRate          decimal.Decimal  `json:"top_10_holder_rate"`
-	RenouncedMint            int              `json:"renounced_mint"`
-	RenouncedFreezeAccount   int              `json:"renounced_freeze_account"`
-	BurnRatio                int              `json:"burn_ratio"`
-	BurnStatus               string           `json:"burn_status"`
-	Launchpad                string           `json:"launchpad"`
-	LaunchpadPlatform        string           `json:"launchpad_platform"`
-	ImageDup                 string           `json:"image_dup"`
-	DevTokenBurnAmount       *decimal.Decimal `json:"dev_token_burn_amount"` // 使用指针以处理可能为 null 的值
-	DevTokenBurnRatio        *decimal.Decimal `json:"dev_token_burn_ratio"`  // 使用指针以处理可能为 null 的值
-	DexscrAd                 int              `json:"dexscr_ad"`
-	DexscrUpdateLink         int              `json:"dexscr_update_link"`
-	CtoFlag                  int              `json:"cto_flag"`
-	TwitterChangeFlag        int              `json:"twitter_change_flag"`
-	TwitterRenameCount       int              `json:"twitter_rename_count"`
-	TwitterDelPostTokenCount int              `json:"twitter_del_post_token_count"`
-	TwitterCreateTokenCount  int              `json:"twitter_create_token_count"`
-	CreatorTokenStatus       string           `json:"creator_token_status"`
-	CreatorClose             bool             `json:"creator_close"`
-	Creator                  string           `json:"creator"`
-	LaunchpadStatus          int              `json:"launchpad_status"`
-	RatTraderAmountRate      decimal.Decimal  `json:"rat_trader_amount_rate"`
-	CreatorCreatedInnerCount int              `json:"creator_created_inner_count"`
-	CreatorCreatedOpenCount  int              `json:"creator_created_open_count"`
-	CreatorCreatedOpenRatio  string           `json:"creator_created_open_ratio"`
-	BluechipOwnerPercentage  decimal.Decimal  `json:"bluechip_owner_percentage"`
-	RugRatio                 decimal.Decimal  `json:"rug_ratio"`
-	SniperCount              int              `json:"sniper_count"`
-	SmartDegenCount          int              `json:"smart_degen_count"`
-	RenownedCount            int              `json:"renowned_count"`
-	IsOG                     *bool            `json:"is_og"` // 使用指针以处理可能为 null 的值
-	IsWashTrading            bool             `json:"is_wash_trading"`
+	ID                       int              `json:"id"`                           // ID
+	Chain                    string           `json:"chain"`                        // 链
+	Address                  string           `json:"address"`                      // 地址
+	Symbol                   string           `json:"symbol"`                       // 符号
+	Logo                     string           `json:"logo"`                         // Logo
+	Price                    decimal.Decimal  `json:"price"`                        // 价格
+	PriceChangePercent       decimal.Decimal  `json:"price_change_percent"`         // 价格变化百分比
+	Swaps                    int              `json:"swaps"`                        // 交易次数
+	Volume                   decimal.Decimal  `json:"volume"`                       // 交易量
+	Liquidity                decimal.Decimal  `json:"liquidity"`                    // 流动性
+	MarketCap                decimal.Decimal  `json:"market_cap"`                   // 市值
+	HotLevel                 int              `json:"hot_level"`                    // 热门等级
+	PoolCreationTimestamp    int64            `json:"pool_creation_timestamp"`      // 资金池创建时间
+	HolderCount              int              `json:"holder_count"`                 // 持币人数
+	PoolType                 int              `json:"pool_type"`                    // 资金池类型
+	PoolTypeStr              string           `json:"pool_type_str"`                // 资金池类型字符串
+	TwitterUsername          string           `json:"twitter_username"`             // Twitter用户名
+	Website                  *string          `json:"website"`                      // 网站
+	Telegram                 *string          `json:"telegram"`                     // 电报
+	TotalSupply              int64            `json:"total_supply"`                 // 总供应量
+	OpenTimestamp            int64            `json:"open_timestamp"`               // 开放时间
+	PriceChangePercent1m     decimal.Decimal  `json:"price_change_percent1m"`       // 1分钟价格变化
+	PriceChangePercent5m     decimal.Decimal  `json:"price_change_percent5m"`       // 5分钟价格变化
+	PriceChangePercent1h     decimal.Decimal  `json:"price_change_percent1h"`       // 1小时价格变化
+	Buys                     int              `json:"buys"`                         // 买入次数
+	Sells                    int              `json:"sells"`                        // 卖出次数
+	InitialLiquidity         decimal.Decimal  `json:"initial_liquidity"`            // 初始流动性
+	IsShowAlert              bool             `json:"is_show_alert"`                // 是否显示提醒
+	Top10HolderRate          decimal.Decimal  `json:"top_10_holder_rate"`           // 前10持有率
+	RenouncedMint            int              `json:"renounced_mint"`               // 是否放弃铸造权限
+	RenouncedFreezeAccount   int              `json:"renounced_freeze_account"`     // 是否放弃冻结权限
+	BurnRatio                int              `json:"burn_ratio"`                   // 燃烧比例
+	BurnStatus               string           `json:"burn_status"`                  // 燃烧状态
+	Launchpad                string           `json:"launchpad"`                    // 发射台
+	LaunchpadPlatform        string           `json:"launchpad_platform"`           // 发射台平台
+	ImageDup                 string           `json:"image_dup"`                    // 图片重复
+	DevTokenBurnAmount       *decimal.Decimal `json:"dev_token_burn_amount"`        // 开发者代币燃烧数量
+	DevTokenBurnRatio        *decimal.Decimal `json:"dev_token_burn_ratio"`         // 开发者代币燃烧比例
+	DexscrAd                 int              `json:"dexscr_ad"`                    // 广告标识
+	DexscrUpdateLink         int              `json:"dexscr_update_link"`           // 更新链接标识
+	CtoFlag                  int              `json:"cto_flag"`                     // CTO标识
+	TwitterChangeFlag        int              `json:"twitter_change_flag"`          // Twitter变更标识
+	TwitterRenameCount       int              `json:"twitter_rename_count"`         // Twitter重命名次数
+	TwitterDelPostTokenCount int              `json:"twitter_del_post_token_count"` // Twitter删除帖子数
+	TwitterCreateTokenCount  int              `json:"twitter_create_token_count"`   // Twitter创建代币数
+	CreatorTokenStatus       string           `json:"creator_token_status"`         // 创建者代币状态
+	CreatorClose             bool             `json:"creator_close"`                // 创建者关闭
+	Creator                  string           `json:"creator"`                      // 创建者地址
+	LaunchpadStatus          int              `json:"launchpad_status"`             // 发射台状态
+	RatTraderAmountRate      decimal.Decimal  `json:"rat_trader_amount_rate"`       // 老鼠仓比例
+	CreatorCreatedInnerCount int              `json:"creator_created_inner_count"`  // 创建者内部创建数
+	CreatorCreatedOpenCount  int              `json:"creator_created_open_count"`   // 创建者公开创建数
+	CreatorCreatedOpenRatio  string           `json:"creator_created_open_ratio"`   // 创建者公开创建比例
+	BluechipOwnerPercentage  decimal.Decimal  `json:"bluechip_owner_percentage"`    // 蓝筹持有比例
+	RugRatio                 decimal.Decimal  `json:"rug_ratio"`                    //  rug比例
+	SniperCount              int              `json:"sniper_count"`                 // 狙击手数量
+	SmartDegenCount          int              `json:"smart_degen_count"`            // 聪明开发者数量
+	RenownedCount            int              `json:"renowned_count"`               // 知名数量
+	IsOG                     *bool            `json:"is_og"`                        // 是否OG
+	IsWashTrading            bool             `json:"is_wash_trading"`              // 是否洗售交易
 }
 
+// TrendingTokens 热门代币列表
 type TrendingTokens struct {
-	Rank []TokenRank `json:"rank"`
+	Rank []TokenRank `json:"rank"` // 代币排名列表
 }
 
+// gmgnOhlc GMGN K线数据
 type gmgnOhlc struct {
-	Open   decimal.Decimal `json:"open"`
-	Close  decimal.Decimal `json:"close"`
-	High   decimal.Decimal `json:"high"`
-	Low    decimal.Decimal `json:"low"`
-	Time   decimal.Decimal `json:"time"`
-	Volume decimal.Decimal `json:"volume"`
+	Open   decimal.Decimal `json:"open"`   // 开盘价
+	Close  decimal.Decimal `json:"close"`  // 收盘价
+	High   decimal.Decimal `json:"high"`   // 最高价
+	Low    decimal.Decimal `json:"low"`    // 最低价
+	Time   decimal.Decimal `json:"time"`   // 时间
+	Volume decimal.Decimal `json:"volume"` // 成交量
 }
 
+// gmgnResponse GMGN API响应
 type gmgnResponse struct {
-	Code int             `json:"code"`
-	Msg  string          `json:"msg"`
-	Data json.RawMessage `json:"data"`
+	Code int             `json:"code"` // 错误码
+	Msg  string          `json:"msg"`  // 错误消息
+	Data json.RawMessage `json:"data"` // 数据
 }
 
+// gmgnTokenCandles GMGN代币K线数据
 type gmgnTokenCandles struct {
-	List []gmgnOhlc `json:"list"`
+	List []gmgnOhlc `json:"list"` // K线列表
 }
