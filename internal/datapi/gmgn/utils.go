@@ -33,6 +33,8 @@ func ChainIdToChainName(chainId int64) (string, bool) {
 		return "bsc", true
 	case 8453:
 		return "base", true
+	case 4663:
+		return "robinhood", true
 	}
 	return "", false
 }

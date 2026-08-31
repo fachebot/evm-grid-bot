@@ -107,6 +107,19 @@ func TestNewClient(t *testing.T) {
 		}
 	})
 
+	t.Run("valid chain Robinhood", func(t *testing.T) {
+		client, err := NewClient(4663, config.Sock5Proxy{})
+		if err != nil {
+			t.Fatalf("NewClient failed: %v", err)
+		}
+		if client == nil {
+			t.Fatal("client should not be nil")
+		}
+		if client.chainIndex != "4663" {
+			t.Errorf("expected chainIndex 4663, got %s", client.chainIndex)
+		}
+	})
+
 	t.Run("with proxy enabled", func(t *testing.T) {
 		proxy := config.Sock5Proxy{
 			Host:   "127.0.0.1",
@@ -131,6 +144,7 @@ func TestChainIdToChainIndex(t *testing.T) {
 	}{
 		{56, "56", false},
 		{8453, "8453", false},
+		{4663, "4663", false},
 		{99999, "", true},
 	}
 

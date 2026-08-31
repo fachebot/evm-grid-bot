@@ -39,11 +39,11 @@ func NewClient(chainId int64, proxy config.Sock5Proxy) (*Client, error) {
 	}
 
 	// 使用surf库创建支持浏览器指纹的HTTP客户端
-	surfClient := surf.NewClient()
+	builder := surf.NewClient().Builder()
 	if proxy.Enable {
-		surfClient.Builder().Proxy(g.String(fmt.Sprintf("socks5://%s:%d", proxy.Host, proxy.Port)))
+		builder.Proxy(g.String(fmt.Sprintf("socks5://%s:%d", proxy.Host, proxy.Port)))
 	}
-	httpClient := surfClient.Builder().
+	httpClient := builder.
 		Impersonate(). // 模拟浏览器
 		Chrome().      // 使用Chrome指纹
 		Build().

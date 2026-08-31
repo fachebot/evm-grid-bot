@@ -1,22 +1,22 @@
 # 链配置
 Chain:
-  # 链ID
-  Id: 56
+  # 链ID (56=BSC, 8453=Base, 4663=Robinhood)
+  Id: 4663
   # RPC地址
-  RpcUrl: "https://1rpc.io/bnb"
+  RpcUrl: "https://rpc.mainnet.chain.robinhood.com"
   # 原生代币配置
   NativeCurrency:
-    Symbol: BNB
+    Symbol: ETH
     Decimals: 18
-  # 稳定币合约地址
-  StablecoinCA: "0x55d398326f99059fF775485246999027B3197955"
+  # 稳定币合约地址 (USDG)
+  StablecoinCA: "0x5fc5360d0400a0fd4f2af552add042d716f1d168"
   # 交易滑点Bps
   SlippageBps: 250
   # DEX聚合器(relay)
   DexAggregator: relay
 
 # 数据API(gmgn/okx)
-Datapi: okx
+Datapi: gmgn
 
 # Okx配置
 OkxWeb3:

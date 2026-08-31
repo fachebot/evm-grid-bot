@@ -6,7 +6,7 @@
 
 ## 📋 项目简介
 
-EVMGridBot 是一个智能的网格交易机器人，通过 Telegram 接口为用户提供 EVM 链（目前支持 BSC 链，扩展到其他 EVM 会非常容易）上代币的自动化网格交易服务。用户只需设置价格区间，机器人将在该区间内自动执行低买高卖的网格交易策略，帮助用户在震荡行情中获利。
+EVMGridBot 是一个智能的网格交易机器人，通过 Telegram 接口为用户提供 EVM 链（目前支持 BSC、Base、Robinhood 链）上代币的自动化网格交易服务。用户只需设置价格区间，机器人将在该区间内自动执行低买高卖的网格交易策略，帮助用户在震荡行情中获利。
 
 > 💡 提示：此项目专为 EVM 链设计。对于 Solana 链交易，推荐使用 [TP Bot](https://t.me/follow_step_bot?start=cwqTcEV3)，[使用教程](https://tpbot-2.gitbook.io/tpbot/ce-le-xin-shou-jiao-cheng/wang-ge-ce-le)可供参考。EVMGridBot 的使用方式与 TP Bot 基本相同。
 
@@ -49,7 +49,7 @@ EVMGridBot 是一个智能的网格交易机器人，通过 Telegram 接口为�
 - ⚙️ **配置管理**：可视化配置 RPC URL、OKX API、Telegram Bot，支持配置验证
 - 📦 **自动更新**：启动器自动检测并下载最新版本
 - 📋 **日志查看**：实时查看程序运行日志，支持级别过滤
-- 🔗 BSC 链支持：专为币安智能链优化的交易体验
+- 🔗 多链支持：支持 BSC、Base、Robinhood 等 EVM 链，可通过配置切换
 - 🎯 智能网格交易：在用户设定的价格区间内自动执行低买高卖策略
 - 🔗 稳定币交易：使用 USDT（可配置）交易代币，避免主币波动风险
 - 📱 Telegram 集成：通过 Telegram Bot 提供便捷的用户交互界面
@@ -89,7 +89,7 @@ EVMGridBot 是一个智能的网格交易机器人，通过 Telegram 接口为�
 
 1. 启动器会自动检测并下载最新版本的机器人程序（如果不存在）
 2. 在启动器界面中配置以下核心配置项：
-   - **RPC URL**：BSC 链的 RPC 地址（点击"修改"按钮进行配置和验证）
+   - **RPC URL**：EVM 链的 RPC 地址（点击"修改"按钮进行配置和验证）
    - **OKX API**：OKX Web3 API 密钥（点击"修改"按钮进行配置和验证）
    - **Telegram Bot**：Telegram 机器人 Token（点击"修改"按钮进行配置和验证）
 3. 配置验证成功后，点击"启动"按钮运行机器人
@@ -146,7 +146,7 @@ go build
 
 1. **RPC URL 配置**：
    - 点击 RPC URL 配置项后的"修改"按钮
-   - 输入 BSC RPC 地址
+   - 输入链 ID 和 RPC 地址
    - 点击"验证"按钮验证 RPC 地址有效性
    - 验证成功后显示链 ID
    - 点击"保存"保存配置
@@ -175,23 +175,23 @@ go build
 ```yaml
 # 链配置
 Chain:
-  # 链ID
-  Id: 56
+  # 链ID (56=BSC, 8453=Base, 4663=Robinhood)
+  Id: 4663
   # RPC地址
-  RpcUrl: "https://1rpc.io/bnb"
+  RpcUrl: "https://rpc.mainnet.chain.robinhood.com"
   # 原生代币配置
   NativeCurrency:
-    Symbol: BNB
+    Symbol: ETH
     Decimals: 18
   # 稳定币合约地址
-  StablecoinCA: "0x55d398326f99059fF775485246999027B3197955"
+  StablecoinCA: "0x5fc5360d0400a0fd4f2af552add042d716f1d168"
   # 交易滑点Bps
   SlippageBps: 250
   # DEX聚合器(relay)
   DexAggregator: relay
 
 # 数据API(gmgn/okx)
-Datapi: okx
+Datapi: gmgn
 
 # Okx配置
 OkxWeb3:
@@ -252,17 +252,17 @@ TokenRequirements:
   MaxTokenAgeMinutes: 960 # 最高代币年龄(分钟)
 ```
 
-除了 API 密钥需要使用自己的配置外，其他配置项可使用默认值。默认使用 USDT 进行交易，如需使用其他稳定币可修改 `Chain.StablecoinCA` 配置。
+除了 API 密钥需要使用自己的配置外，其他配置项可使用默认值。默认使用 USDG 进行交易，如需使用其他稳定币可修改 `Chain.StablecoinCA` 配置。切换链时需同步修改 `Chain.Id`、`Chain.RpcUrl`、`Chain.NativeCurrency` 和 `Chain.StablecoinCA`。
 
 #### 获取必要的 API 密钥
 
-**1. BSC RPC URL**
+**1. EVM 链 RPC URL**
 
-- 访问 [QuickNode](https://www.quicknode.com/)
-- 注册免费账户
-- 创建 BSC 主网节点
-- 获取 RPC URL
-- 将 RPC URL 填写到配置文件 `Chain.RpcUrl` 项
+以 Robinhood 链为例：
+
+- 官方公共 RPC：`https://rpc.mainnet.chain.robinhood.com`
+- 也可访问 [QuickNode](https://www.quicknode.com/) 注册免费账户创建节点
+- 将 RPC URL 填写到配置文件 `Chain.RpcUrl` 项，链 ID 填写到 `Chain.Id` 项（Robinhood 为 4663）
 
 **2. OKX Web3 API**
 

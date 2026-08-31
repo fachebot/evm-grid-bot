@@ -33,6 +33,8 @@ func ChainIdToChainIndex(chainId int64) (string, bool) {
 		return "56", true
 	case 8453:
 		return "8453", true
+	case 4663:
+		return "4663", true
 	}
 	return "", false
 }

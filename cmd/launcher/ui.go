@@ -30,6 +30,7 @@ type DeployUI struct {
 	exePath      string
 
 	// 配置项
+	chainId           *widget.Entry
 	rpcUrl            *widget.Entry
 	okxApikey         *widget.Entry
 	okxSecretkey      *widget.Entry
@@ -218,10 +219,10 @@ func (ui *DeployUI) showStep1Download() {
 
 // showStep2RPC 显示步骤2：配置RPC
 func (ui *DeployUI) showStep2RPC() {
-	title := widget.NewRichTextFromMarkdown("## 步骤 2/5: 配置 BSC RPC 地址")
+	title := widget.NewRichTextFromMarkdown("## 步骤 2/5: 配置 EVM 链 RPC 地址")
 
 	description := widget.NewRichTextFromMarkdown(`
-需要BSC链的RPC地址，您可以选择以下任一服务商注册获取：
+需要EVM链的RPC地址，您可以选择以下任一服务商注册获取：
 	`)
 
 	alchemyBtn := widget.NewButton("注册 Alchemy", func() {
@@ -232,8 +233,12 @@ func (ui *DeployUI) showStep2RPC() {
 		OpenURL("https://www.quicknode.com/")
 	})
 
+	ui.chainId = widget.NewEntry()
+	ui.chainId.SetText("4663")
+	ui.chainId.SetPlaceHolder("请输入链ID，例如: 4663 (Robinhood)")
+
 	ui.rpcUrl = widget.NewEntry()
-	ui.rpcUrl.SetPlaceHolder("请输入BSC RPC地址，例如: https://...")
+	ui.rpcUrl.SetPlaceHolder("请输入RPC地址，例如: https://rpc.mainnet.chain.robinhood.com")
 	// RPC输入框变化时不自动验证，需要用户点击验证按钮
 
 	validateStatus := widget.NewLabel("")
@@ -253,7 +258,7 @@ func (ui *DeployUI) showStep2RPC() {
 		validateStatus.Show()
 		validateStatus.SetText("验证中...")
 		go func() {
-			ui.validateRPCWithStatus(ui.rpcUrl.Text, validateStatus, nextBtn)
+			ui.validateRPCWithStatus(ui.chainId.Text, ui.rpcUrl.Text, validateStatus, nextBtn)
 		}()
 	})
 
@@ -265,6 +270,8 @@ func (ui *DeployUI) showStep2RPC() {
 		description,
 		container.NewHBox(alchemyBtn, quicknodeBtn),
 		widget.NewSeparator(),
+		widget.NewLabel("链ID:"),
+		ui.chainId,
 		widget.NewLabel("RPC地址:"),
 		ui.rpcUrl,
 		container.NewHBox(validateBtn, validateStatus),
@@ -282,7 +289,7 @@ func (ui *DeployUI) showStep2RPC() {
 }
 
 // validateRPCWithStatus 验证RPC地址并更新状态
-func (ui *DeployUI) validateRPCWithStatus(rpcUrl string, statusLabel *widget.Label, nextBtn *widget.Button) {
+func (ui *DeployUI) validateRPCWithStatus(chainIdStr, rpcUrl string, statusLabel *widget.Label, nextBtn *widget.Button) {
 	if rpcUrl == "" {
 		fyne.Do(func() {
 			statusLabel.SetText("请输入RPC地址")
@@ -291,7 +298,18 @@ func (ui *DeployUI) validateRPCWithStatus(rpcUrl string, statusLabel *widget.Lab
 		return
 	}
 
-	err := ui.validator.ValidateRPC(rpcUrl, 56)
+	chainId, err := strconv.ParseInt(strings.TrimSpace(chainIdStr), 10, 64)
+	if err != nil || chainId <= 0 {
+		fyne.Do(func() {
+			statusLabel.SetText("✗ 链ID格式错误")
+			statusLabel.Importance = widget.WarningImportance
+			ui.rpcValid = false
+			nextBtn.Disable()
+		})
+		return
+	}
+
+	err = ui.validator.ValidateRPC(rpcUrl, chainId)
 	if err != nil {
 		fyne.Do(func() {
 			statusLabel.SetText("✗ 验证失败: " + err.Error())
@@ -302,6 +320,7 @@ func (ui *DeployUI) validateRPCWithStatus(rpcUrl string, statusLabel *widget.Lab
 	} else {
 		// 保存配置
 		ui.configurator.UpdateConfig(func(cfg *config.Config) {
+			cfg.Chain.Id = chainId
 			cfg.Chain.RpcUrl = rpcUrl
 		})
 
