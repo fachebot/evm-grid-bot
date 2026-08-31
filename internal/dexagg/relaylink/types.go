@@ -29,16 +29,16 @@ type FeaturedToken struct {
 }
 
 type ERC20Currency struct {
-	ID               string `json:"id"`
-	Symbol           string `json:"symbol"`
-	Name             string `json:"name"`
-	Address          string `json:"address"`
-	Decimals         int    `json:"decimals"`
-	SupportsBridging bool   `json:"supportsBridging"`
-	SupportsPermit   bool   `json:"supportsPermit"`
-	WithdrawalFee    int    `json:"withdrawalFee"`
-	DepositFee       int    `json:"depositFee"`
-	SurgeEnabled     bool   `json:"surgeEnabled"`
+	ID               string  `json:"id"`
+	Symbol           string  `json:"symbol"`
+	Name             string  `json:"name"`
+	Address          string  `json:"address"`
+	Decimals         int     `json:"decimals"`
+	SupportsBridging bool    `json:"supportsBridging"`
+	SupportsPermit   bool    `json:"supportsPermit"`
+	WithdrawalFee    float64 `json:"withdrawalFee"`
+	DepositFee       float64 `json:"depositFee"`
+	SurgeEnabled     bool    `json:"surgeEnabled"`
 }
 
 type Contracts struct {
@@ -69,8 +69,8 @@ type Chain struct {
 	PartialDisableLimit    int               `json:"partialDisableLimit"`
 	BlockProductionLagging bool              `json:"blockProductionLagging"`
 	Currency               Currency          `json:"currency"`
-	WithdrawalFee          int               `json:"withdrawalFee"`
-	DepositFee             int               `json:"depositFee"`
+	WithdrawalFee          float64           `json:"withdrawalFee"`
+	DepositFee             float64           `json:"depositFee"`
 	SurgeEnabled           bool              `json:"surgeEnabled"`
 	FeaturedTokens         []FeaturedToken   `json:"featuredTokens"`
 	ERC20Currencies        []ERC20Currency   `json:"erc20Currencies"`

@@ -3,14 +3,14 @@ package relaylink
 import (
 	"context"
 	"crypto/ecdsa"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"math/big"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/fachebot/evm-grid-bot/internal/dexagg"
+	"github.com/fachebot/evm-grid-bot/internal/logger"
 	"github.com/fachebot/evm-grid-bot/internal/svc"
 	"github.com/fachebot/evm-grid-bot/internal/utils/evm"
 
@@ -24,10 +24,23 @@ var (
 	ETH = common.HexToAddress("0x0000000000000000000000000000000000000000")
 )
 
+// 链列表缓存配置
+const (
+	chainsCacheTTL       = 1 * time.Hour // 链列表缓存有效期
+	chainsFetchRetries   = 3             // 链列表拉取重试次数
+	chainsFetchRetryWait = time.Second   // 重试间隔
+)
+
+// globalChainsCache 全局链列表缓存
+// 避免每次报价都重新拉取全量链列表(62条链的大JSON), 刷新失败时回退到上次快照
+var globalChainsCache = struct {
+	mutex     sync.Mutex
+	chains    map[int64]Chain
+	fetchedAt time.Time
+}{}
+
 type RelaylinkClient struct {
-	transportProxy   *http.Transport
-	chainsCache      map[int64]Chain
-	chainsCacheMutex sync.Mutex
+	transportProxy *http.Transport
 }
 
 func NewRelaylinkClient(transportProxy *http.Transport) *RelaylinkClient {
@@ -52,24 +65,78 @@ func (client *RelaylinkClient) GetChains(ctx context.Context) ([]Chain, error) {
 	return chains.Chains, err
 }
 
-func (client *RelaylinkClient) GetChainsByID(ctx context.Context, chainId int64) (Chain, bool) {
-	client.chainsCacheMutex.Lock()
-	defer client.chainsCacheMutex.Unlock()
+// getChains 获取链列表(带全局缓存)
+// 缓存有效期内直接返回; 过期或为空时刷新; 刷新失败回退到上次成功快照
+func (client *RelaylinkClient) getChains(ctx context.Context) (map[int64]Chain, error) {
+	globalChainsCache.mutex.Lock()
+	defer globalChainsCache.mutex.Unlock()
 
-	if client.chainsCache == nil {
-		chains, err := client.GetChains(ctx)
-		if err != nil {
-			return Chain{}, false
-		}
-
-		client.chainsCache = make(map[int64]Chain)
-		for _, chain := range chains {
-			client.chainsCache[chain.ID] = chain
-		}
+	if len(globalChainsCache.chains) > 0 && time.Since(globalChainsCache.fetchedAt) < chainsCacheTTL {
+		return globalChainsCache.chains, nil
 	}
 
-	chain, ok := client.chainsCache[chainId]
-	return chain, ok
+	chains, err := client.fetchChainsWithRetry(ctx)
+	if err != nil {
+		if len(globalChainsCache.chains) > 0 {
+			logger.Warnf("[RelaylinkClient] 刷新链列表失败, 使用上次缓存, %v", err)
+			return globalChainsCache.chains, nil
+		}
+		return nil, err
+	}
+
+	globalChainsCache.chains = chains
+	globalChainsCache.fetchedAt = time.Now()
+	return chains, nil
+}
+
+// fetchChainsWithRetry 拉取链列表并自动重试
+func (client *RelaylinkClient) fetchChainsWithRetry(ctx context.Context) (map[int64]Chain, error) {
+	var lastErr error
+	for i := 0; i < chainsFetchRetries; i++ {
+		if i > 0 {
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(chainsFetchRetryWait):
+			}
+		}
+
+		chains, err := client.fetchChains(ctx)
+		if err == nil {
+			return chains, nil
+		}
+		lastErr = err
+		logger.Warnf("[RelaylinkClient] 拉取链列表失败(第%d次), %v", i+1, err)
+	}
+
+	return nil, lastErr
+}
+
+// fetchChains 拉取全量链列表并建立链ID索引
+func (client *RelaylinkClient) fetchChains(ctx context.Context) (map[int64]Chain, error) {
+	chains, err := client.GetChains(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("fetch relay chains: %w", err)
+	}
+
+	result := make(map[int64]Chain, len(chains))
+	for _, chain := range chains {
+		result[chain.ID] = chain
+	}
+	return result, nil
+}
+
+func (client *RelaylinkClient) GetChainsByID(ctx context.Context, chainId int64) (Chain, error) {
+	chains, err := client.getChains(ctx)
+	if err != nil {
+		return Chain{}, err
+	}
+
+	chain, ok := chains[chainId]
+	if !ok {
+		return Chain{}, fmt.Errorf("unsupported chain: %d", chainId)
+	}
+	return chain, nil
 }
 
 func (client *RelaylinkClient) Quote(
@@ -82,9 +149,9 @@ func (client *RelaylinkClient) Quote(
 	slippageBps int,
 	enableInfiniteApproval bool,
 ) (*QuoteResponse, error) {
-	chain, ok := client.GetChainsByID(ctx, chainId)
-	if !ok {
-		return nil, errors.New("unsupported chain")
+	chain, err := client.GetChainsByID(ctx, chainId)
+	if err != nil {
+		return nil, err
 	}
 
 	params := map[string]any{
@@ -96,11 +163,6 @@ func (client *RelaylinkClient) Quote(
 		"amount":              amount.String(),
 		"tradeType":           "EXACT_INPUT",
 		"slippageTolerance":   slippageBps,
-	}
-
-	d, err := json.Marshal(params)
-	if err == nil {
-		fmt.Println(string(d))
 	}
 
 	httpClient := new(http.Client)
