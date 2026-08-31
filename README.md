@@ -8,8 +8,6 @@
 
 EVMGridBot 是一个智能的网格交易机器人，通过 Telegram 接口为用户提供 EVM 链（目前支持 BSC、Base、Robinhood 链）上代币的自动化网格交易服务。用户只需设置价格区间，机器人将在该区间内自动执行低买高卖的网格交易策略，帮助用户在震荡行情中获利。
 
-> 💡 提示：此项目专为 EVM 链设计。对于 Solana 链交易，推荐使用 [TP Bot](https://t.me/follow_step_bot?start=cwqTcEV3)，[使用教程](https://tpbot-2.gitbook.io/tpbot/ce-le-xin-shou-jiao-cheng/wang-ge-ce-le)可供参考。EVMGridBot 的使用方式与 TP Bot 基本相同。
-
 - 🐛 Bug 报告：[Issues](https://github.com/fachebot/evm-grid-bot/issues)
 - 📧 使用交流：[电报群](https://t.me/+sRrZC-LVPAsyOWE1)
 
@@ -75,6 +73,7 @@ EVMGridBot 是一个智能的网格交易机器人，通过 Telegram 接口为�
 **1. 下载启动器**
 
 前往 [Release 页面](https://github.com/fachebot/evm-grid-bot/releases) 下载对应系统架构的启动器压缩包（仅支持 Windows）：
+
 - **Windows 64位**：`launcher-v*-windows-amd64.zip`
 - **Windows 32位**：`launcher-v*-windows-386.zip`
 
